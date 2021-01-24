@@ -24,7 +24,7 @@ RUN adduser --disabled-login --gecos "Simply a developer,,," ${UNAME}; \
 WORKDIR $JOB_WORK_DIR
 
 # install conda package manager ###############################################
-COPY --chown=root:root setup_support/Miniconda3-latest-Linux-x86_64.sh /opt/conda_install.sh
+COPY --chown=root:root support/Miniconda3-latest-Linux-x86_64.sh /opt/conda_install.sh
 RUN cd /opt; \
 	chmod 744 conda_install.sh; \
 	./conda_install.sh -b -p ${CONDA_DIR};

@@ -14,7 +14,14 @@
 #
 # ==================================================================================================
 
-url_download="wget --append-output=wget.log --verbose --continue"
+. $(pwd)/../common/common.sh
 
 # download the modelsim executable
-$url_download https://download.altera.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/ModelSimSetup-20.1.1.720-linux.run
+modelsim_install_script="ModelSimSetup-20.1.1.720-linux.run"
+
+if test -f "$(pwd)/support/$modelsim_install_script"
+then
+    echo "$modelsim_install_script install script has been already downloaded. Skipping..."
+else
+    $url_download https://download.altera.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/
+fi
