@@ -23,7 +23,11 @@ RUN adduser --disabled-login --gecos "Simply a developer,,," ${UNAME}; \
 # NOTE: always set the developer user as starting working folder, but do not set the user unless for a job image
 WORKDIR $JOB_WORK_DIR
 
-# install conda package manager ###############################################
+# install tools ###############################################################
+RUN apt update \
+	&& apt install -y git make file tree man nano
+
+# setup miniconda ###############################################
 COPY --chown=root:root support/Miniconda3-latest-Linux-x86_64.sh /opt/conda_install.sh
 RUN cd /opt; \
 	chmod 744 conda_install.sh; \
@@ -32,8 +36,9 @@ RUN cd /opt; \
 # add commands to the user path
 ENV PATH="${CONDA_DIR}/bin:$PATH"
 
-# create a 32bit environment
-# RUN set CONDA_FORCE_32BIT=1; \
-# 	conda create -y --name py3x7_32b;
+# initialize the shell to use conda environments
+RUN conda init bash
 
-USER developer
+# uncomment all alias definitions in the bashrc
+RUN sed -i 's/^#\s*alias\s\+l/alias l/' /root/.bashrc
+RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' /root/.bashrc

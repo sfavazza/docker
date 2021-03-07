@@ -32,7 +32,7 @@ this way the created docker container can perform its job and the sources/result
 mounted volume:
 
 ``` shell
-sudo docker run --rm -ti -v "$(pwd)":/home/developer <docker-image>
+sudo docker run --rm -ti -v "$(pwd)":/home/developer/work <docker-image>
 ```
 
 The `--rm` will remove the container once closed, the `-ti` are two independent flags to allocate a pseudo-tty
