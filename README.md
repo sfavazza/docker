@@ -9,6 +9,35 @@ current folder.
 Under `dockerfiles` folder are stored all the folders which in turn contain the docker file describing a specific
 image and the necessary sources needed with them (if not a script to recover them from Internet).
 
+## Install ##
+
+On Debian is available a dedicated *.deb package. Follow the instructions at [this
+page](https://docs.docker.com/engine/install/debian/).
+
+Docker by default stores all the generated artifacts (images/containers/volumes/networks) into the default
+folder `/var/lib/docker/`. Ut 
+
+## Uninstall ##
+
+To uninstall a docker installation execute the following command:
+
+``` shell
+# old versions
+sudo apt remove docker docker-engine docker.io containerd runc
+# new versions
+sudo apt remove docker-ce docker-ce-cli containerd.io
+```
+
+It is not a problem if `apt` reports that some of them are not installed at all (it is referred to older
+versions).
+
+Moreover to completely remove all images/containers/volumes/networks, remove the `/var/lib/docker/` folder
+(original docker content destination folder):
+
+``` shell
+sudo rm -rf /var/lib/docker
+```
+
 ## Docker How-To ##
 
 The following sections collect some nice tricks to efficiently take care of the images in docker. In order to
@@ -79,3 +108,8 @@ docker rmi -f $(docker images -f "dangling=true" -q)
 ```
 
 The `-f` option force the removal, it might be required (and often suggest by the tool itself).
+
+
+todo:
+
+- reinstall docker on your drive to have access to a way larger volume
