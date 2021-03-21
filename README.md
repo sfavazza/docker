@@ -11,7 +11,14 @@ image and the necessary sources needed with them (if not a script to recover the
 
 ## Docker How-To ##
 
-The following sections collect some nice tricks to efficiently take care of the images in docker.
+The following sections collect some nice tricks to efficiently take care of the images in docker. In order to
+let your user to use docker without the use of sudo, add your user to the `docker` group:
+
+``` shell
+sudo usermod -a -G docker
+```
+
+Remember to logout and login again in your user account.
 
 ### Build Images ###
 
@@ -49,13 +56,26 @@ sudo docker run --rm -ti -v "$(pwd)":/home/developer \
        <docker-image>
 ```
 
-### Deleting Images ###
+### Cleaning Up ###
+
+There are few commands to free up some space when getting the error `no space left on device`.
+
+#### Delete All At Once ####
+
+This will delete all containers that were stopped as well as all volumes and networks and that are not used by
+any container. It will also remove all dangling images:
+
+``` shell
+docker system prune
+```
+
+#### Deleting Dandling Images Only ####
 
 When using the same name:tag combinations to try out different partial images, the local registry will be
 cluttered with orphan `<none>` image steps. To clear out them use the following
 
 ``` shell
-sudo docker rmi -f $(sudo docker images -f "dangling=true" -q)
+docker rmi -f $(docker images -f "dangling=true" -q)
 ```
 
 The `-f` option force the removal, it might be required (and often suggest by the tool itself).

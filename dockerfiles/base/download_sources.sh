@@ -17,11 +17,4 @@
 . $(pwd)/../common/common.sh
 
 # download miniconda executable
-anaconda_install_script="Miniconda3-latest-Linux-x86_64.sh"
-
-if test -f "$(pwd)/support/$anaconda_install_script"
-then
-    echo "$anaconda_install_script install script has been already downloaded. Skipping..."
-else
-    $url_download https://repo.anaconda.com/miniconda/$anaconda_install_script
-fi
+exists_or_download "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
