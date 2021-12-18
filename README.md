@@ -15,7 +15,15 @@ On Debian is available a dedicated *.deb package. Follow the instructions at [th
 page](https://docs.docker.com/engine/install/debian/).
 
 Docker by default stores all the generated artifacts (images/containers/volumes/networks) into the default
-folder `/var/lib/docker/`. Ut 
+folder `/var/lib/docker/`. If the space required is bigger than what available on the mentioned folder, one
+trick consist in mounting a folder created on a more spacious file-system and bind it to the docker destination
+folder.
+
+This can be achieved by adding the following line to the `/etc/fstab` file:
+
+``` shell
+<large_space_folder> /var/lib/docker/ none defaults,bind 0 0
+```
 
 ## Uninstall ##
 
@@ -44,10 +52,10 @@ The following sections collect some nice tricks to efficiently take care of the 
 let your user to use docker without the use of sudo, add your user to the `docker` group:
 
 ``` shell
-sudo usermod -a -G docker
+sudo usermod -a -G docker <your_login>
 ```
 
-Remember to logout and login again in your user account.
+Remember to logout and login again in your user account for this setting to take effect.
 
 ### Build Images ###
 
@@ -84,6 +92,9 @@ sudo docker run --rm -ti -v "$(pwd)":/home/developer \
        -v /tmp/.X11-unix:/tmp/.X11-unix:ro -e DISPLAY=$DISPLAY \
        <docker-image>
 ```
+
+Follow this guide to have more info and ensure the container can access the user X Window process:
+https://www.cbtechinc.com/desktop-docker-1-linux-graphical-containers/
 
 ### Cleaning Up ###
 
