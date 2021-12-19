@@ -29,9 +29,9 @@ RUN apt update \
 
 # setup miniconda ###############################################
 COPY --chown=root:root support/Miniconda3-latest-Linux-x86_64.sh /opt/conda_install.sh
-RUN cd /opt; \
-	chmod 744 conda_install.sh; \
-	./conda_install.sh -b -p ${CONDA_DIR};
+RUN cd /opt && \
+	chmod 744 conda_install.sh && \
+	./conda_install.sh -b -p ${CONDA_DIR}
 
 # add commands to the user path
 ENV PATH="${CONDA_DIR}/bin:$PATH"

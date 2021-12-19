@@ -17,7 +17,13 @@
 #     -v <dedicated emacs folder>:/home/emacsserver
 #     -v <Any drive to work on>:/<drive letter>
 #     ...
+#     -e HOME=/u/
 #     --rm --name emacs-docker emacs:latest /bin/bash -c "emacs --daemon"  (to be tested)
+#
+# LINUX VERSION FOR GUI
+# sudo docker run --rm -ti --cap-add=NET_ADMIN \
+#     -v /tmp/.X11-unix:/tmp/.X11-unix:ro
+#     --net=host -e DISPLAY=:0 emacs:latest
 #
 # Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
 # 
@@ -27,7 +33,10 @@ FROM debian:bullseye
 
 # local variables used at build time
 ARG UNAME=emacsserver
-ARG EMACS_BUILD=/home/${UNAME}/emacs_build
+ARG EMACS_ROOT=/home/${UNAME}
+ARG EMACS_BUILD=${EMACS_ROOT}/emacs_build
+ARG EMACS_ARCHIVE=emacs.tar.gz
+ARG EMACS_BIN=${EMACS_ROOT}/emacs_install
 
 # add a new user and change the root password
 RUN adduser --disabled-login --gecos "emacs server daemon,,," ${UNAME}; \
@@ -60,20 +69,26 @@ RUN apt update && apt install -y \
     libselinux1-dev libharfbuzz-dev libjansson-dev libasound2-dev libmagick++-6.q16-dev libacl1-dev \
     zlib1g-dev fakeroot
 
+COPY --chown=root:root support/emacs-*.tar.gz ${EMACS_BUILD}/${EMACS_ARCHIVE}
+WORKDIR ${EMACS_BUILD}
+RUN tar -xvf ${EMACS_ARCHIVE}
 
 
-# # setup miniconda ###############################################
-# COPY --chown=root:root support/Miniconda3-latest-Linux-x86_64.sh /opt/conda_install.sh
-# RUN cd /opt; \
-#     chmod 744 conda_install.sh; \
-#     ./conda_install.sh -b -p ${EMACS_BUILD};
+# install emacs
+RUN cd emacs-* && ./configure --with-x --prefix=${EMACS_BIN} && make && make install
+RUN cd emacs-* && make clean
 
-# # add commands to the user path
-# ENV PATH="${EMACS_BUILD}/bin:$PATH"
+# save space by removing the installation file
+RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 
-# # initialize the shell to use conda environments
-# RUN conda init bash
 
-# # uncomment all alias definitions in the bashrc
-# RUN sed -i 's/^#\s*alias\s\+l/alias l/' /root/.bashrc
-# RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' /root/.bashrc
+# add commands to the user path
+WORKDIR ${EMACS_ROOT}
+USER ${UNAME}
+ENV PATH="${EMACS_BIN}/bin:$PATH"
+
+# restore bash default setting
+RUN cp /etc/skel/.bashrc ~/
+# uncomment all alias definitions in the bashrc
+RUN sed -i 's/^#\s*alias\s\+l/alias l/' ~/.bashrc
+RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
