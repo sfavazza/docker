@@ -10,20 +10,33 @@
 # How To Use It
 #
 # Create two new commands in your OS, one to invoke the emacs-daemon in the docker, the other one to invoke an
-# emacsclient (both in background to not open too many terminals). Create a folder on your system and mount it
-# as described:
+# emacsclient (both in background to not open too many terminals). Create the following structure:
+# - store
+#   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
+#   |- .emacs.d: emacs home directory
+#   |- emacs_git: org-based configuration 
 #
+# WINDOWS VERSION
 # $ docker run \
-#     -v <dedicated emacs folder>:/home/emacsserver
-#     -v <Any drive to work on>:/<drive letter>
+#     -v <path to the "store" folder>:/home/emacsserver/store \
+#     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
 #     ...
-#     -e HOME=/u/
-#     --rm --name emacs-docker emacs:latest /bin/bash -c "emacs --daemon"  (to be tested)
+#     -v u:/:/u/   <-- to profit from the local host services (e.g. ssh-agent)
+#     -e HOME=/u/  <-- to profit from the local host services (e.g. ssh-agent)
+#     -d emacs:latest /bin/bash -c "emacs --daemon"  (to be tested)
 #
 # LINUX VERSION FOR GUI
-# sudo docker run --rm -ti --cap-add=NET_ADMIN \
+# sudo docker run --rm \
+#     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix:ro
-#     --net=host -e DISPLAY=:0 emacs:latest
+#     --net=host -e DISPLAY=:0 \
+#     -d emacs:latest tail -f /dev/null
+#
+# The arguments after the image name (emacs:latest) are the first command and its arguments that are executed on
+# the container once it is up and running. That command in particular shows the content of the /dev/null device
+# indefinitely, hence keeping its process alive and the docker running in background (with the -d option)
+#
+# 
 #
 # Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
 # 
@@ -81,6 +94,17 @@ RUN cd emacs-* && make clean
 # save space by removing the installation file
 RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 
+# python 3.9 is included, install pip and install support packges for elpy
+RUN apt update && apt install -y python3-pip && python3 -m pip install --upgrade pip
+RUN python3 -m pip install mypy pylint flake8
+
+RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
+
+# FIXME: automate the image and dockerfile with a new layer to installing the required package (write a python
+# script wrapping around pip invokation, if the installation is successful install the package. Use it only for
+# published packages, not for developed ones, for those always use "-e install").
+
+COPY .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
