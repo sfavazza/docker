@@ -23,18 +23,17 @@
 #     ...
 #     -v u:/:/u/   <-- to profit from the local host services (e.g. ssh-agent)
 #     -e HOME=/u/  <-- to profit from the local host services (e.g. ssh-agent)
-#     -d emacs:latest /bin/bash -c "emacs --daemon"  (to be tested)
+#     -d emacs:latest emacs --fg-daemon
 #
 # LINUX VERSION FOR GUI
 # sudo docker run --rm \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix:ro
 #     --net=host -e DISPLAY=:0 \
-#     -d emacs:latest tail -f /dev/null
+#     -d emacs:latest emacs --fg-daemon
 #
-# The arguments after the image name (emacs:latest) are the first command and its arguments that are executed on
-# the container once it is up and running. That command in particular shows the content of the /dev/null device
-# indefinitely, hence keeping its process alive and the docker running in background (with the -d option)
+# With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
+# terminal busy.
 #
 # 
 #
@@ -104,7 +103,7 @@ RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
 # script wrapping around pip invokation, if the installation is successful install the package. Use it only for
 # published packages, not for developed ones, for those always use "-e install").
 
-COPY .emacs ${EMACS_ROOT}/
+COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
@@ -116,3 +115,7 @@ RUN cp /etc/skel/.bashrc ~/
 # uncomment all alias definitions in the bashrc
 RUN sed -i 's/^#\s*alias\s\+l/alias l/' ~/.bashrc
 RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
+
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
+    && gpg --import ~/_gnuring.gpg
