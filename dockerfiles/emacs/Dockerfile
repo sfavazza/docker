@@ -16,6 +16,8 @@
 #   |- .emacs.d: emacs home directory
 #   |- emacs_git: org-based configuration 
 #
+# IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
+# 
 # WINDOWS VERSION
 # $ docker run \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
@@ -23,18 +25,21 @@
 #     ...
 #     -v u:/:/u/   <-- to profit from the local host services (e.g. ssh-agent)
 #     -e HOME=/u/  <-- to profit from the local host services (e.g. ssh-agent)
-#     -d emacs:latest emacs --fg-daemon
+#     emacs:latest emacs --fg-daemon
 #
 # LINUX VERSION FOR GUI
-# sudo docker run --rm \
+# sudo docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix:ro
 #     --net=host -e DISPLAY=:0 \
-#     -d emacs:latest emacs --fg-daemon
+#     -d emacs:latest rm -rf ~/store/.emacs.d/server/* && emacs --fg-daemon
 #
 # With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
 # terminal busy.
 #
+# The client can be easily invoked with the following command:
+#
+# docker exec emacs_docker -d emacsclient -c -f /home/emacsserver/store/.emacs.d/server/fermoposta
 # 
 #
 # Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
@@ -84,7 +89,6 @@ RUN apt update && apt install -y \
 COPY --chown=root:root support/emacs-*.tar.gz ${EMACS_BUILD}/${EMACS_ARCHIVE}
 WORKDIR ${EMACS_BUILD}
 RUN tar -xvf ${EMACS_ARCHIVE}
-
 
 # install emacs
 RUN cd emacs-* && ./configure --with-x --prefix=${EMACS_BIN} && make && make install
