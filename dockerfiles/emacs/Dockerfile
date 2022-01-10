@@ -5,7 +5,7 @@
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build -t emacs:latest .
+# $ docker build -t emacs_docker:latest .
 #
 # How To Use It
 #
@@ -25,21 +25,23 @@
 #     ...
 #     -v u:/:/u/   <-- to profit from the local host services (e.g. ssh-agent)
 #     -e HOME=/u/  <-- to profit from the local host services (e.g. ssh-agent)
-#     emacs:latest emacs --fg-daemon
+#     emacs_docker:latest emacs --fg-daemon
 #
 # LINUX VERSION FOR GUI
 # sudo docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
-#     -v /tmp/.X11-unix:/tmp/.X11-unix:ro
-#     --net=host -e DISPLAY=:0 \
-#     -d emacs:latest rm -rf ~/store/.emacs.d/server/* && emacs --fg-daemon
+#     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+#     -v /:/orig \
+#     --net=host \
+#     -e DISPLAY=:0 \
+#     -d emacs_docker:latest rm -rf ~/store/.emacs.d/server/* && emacs --fg-daemon
 #
 # With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
-# terminal busy.
+# terminal busy. Mapping the root to a volume in the container allows full access to the host fs. 
 #
 # The client can be easily invoked with the following command:
 #
-# docker exec emacs_docker -d emacsclient -c -f /home/emacsserver/store/.emacs.d/server/fermoposta
+# docker exec -d emacs_docker emacsclient -c -f /home/emacsserver/store/.emacs.d/server/fermoposta
 # 
 #
 # Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
