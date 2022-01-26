@@ -14,7 +14,7 @@
 # - store
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
 #   |- .emacs.d: emacs home directory
-#   |- emacs_git: org-based configuration 
+#   |- emacs_git: org-based configuration
 #
 # IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
 # 
@@ -30,18 +30,23 @@
 # LINUX VERSION FOR GUI
 # sudo docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
+#     -v <host root fs>:/orig \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-#     -v /:/orig \
 #     --net=host \
 #     -e DISPLAY=:0 \
-#     -d emacs_docker:latest rm -rf ~/store/.emacs.d/server/* && emacs --fg-daemon
+#      emacs_docker:latest emacs --fg-daemon
 #
 # With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
-# terminal busy. Mapping the root to a volume in the container allows full access to the host fs. 
+# terminal busy. Mapping the root to a volume in the container allows full access to the host fs.
+#
+# You can map it to a commnd in ".bashrc" writing into it:
+#
+#  alias start_emacs='<cmd starting emacs server>'
 #
 # The client can be easily invoked with the following command:
 #
 # docker exec -d emacs_docker emacsclient -c -f /home/emacsserver/store/.emacs.d/server/fermoposta
+# --------------------------------------------------------------------------------------------------------------
 # 
 #
 # Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)

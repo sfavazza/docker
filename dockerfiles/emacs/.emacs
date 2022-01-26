@@ -23,4 +23,5 @@
 (unless (file-exists-p "~/store/emacs_git/.setup-complete")
   (load-file "~/store/emacs_git/all_package_install.el"))
 
+;; load the emacs configuration file found in the store/ folder mapped from the host fs
 (load-file "~/store/init_emacs.el")
