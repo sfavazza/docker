@@ -93,6 +93,10 @@ sudo docker run --rm -ti -v "$(pwd)":/home/developer \
        <docker-image>
 ```
 
+In Windows properly set the `DISPLAY` variable will suffice (no X11 volume mapping required). Configure the
+VcXsrv Windows X Server software. Make sure the OS variable is set to the internal gateway address such that the
+X11 server can listen to the docker container requests.
+
 Follow this guide to have more info and ensure the container can access the user X Window process:
 https://www.cbtechinc.com/desktop-docker-1-linux-graphical-containers/
 

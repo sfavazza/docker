@@ -23,8 +23,6 @@
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
 #     ...
-#     -v u:/:/u/   <-- to profit from the local host services (e.g. ssh-agent)
-#     -e HOME=/u/  <-- to profit from the local host services (e.g. ssh-agent)
 #     emacs_docker:latest emacs --fg-daemon
 #
 # LINUX VERSION FOR GUI
@@ -41,7 +39,7 @@
 #
 # You can map it to a commnd in ".bashrc" writing into it:
 #
-#  alias start_emacs='<cmd starting emacs server>'
+#  alias dck_emacsserver='<cmd starting emacs server>'
 #
 # The client can be easily invoked with the following command:
 #
@@ -118,7 +116,6 @@ COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
-USER ${UNAME}
 ENV PATH="${EMACS_BIN}/bin:$PATH"
 
 # restore bash default setting
@@ -134,4 +131,4 @@ RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.g
 RUN apt update && apt install -y \
     htop
 
-USER $UNAME
+USER ${UNAME}:${UNAME}
