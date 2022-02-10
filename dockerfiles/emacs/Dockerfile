@@ -19,7 +19,7 @@
 # IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
 # 
 # WINDOWS VERSION
-# $ docker run \
+# $ docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
 #     ...
@@ -130,3 +130,8 @@ RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
     && gpg --import ~/_gnuring.gpg
+
+RUN apt update && apt install -y \
+    htop
+
+USER $UNAME
