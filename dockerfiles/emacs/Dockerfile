@@ -15,7 +15,7 @@
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
 #   |- .emacs.d: emacs home directory
 #   |- emacs_git: org-based configuration
-#   |- configs: folder containing optional tool configurations files (e.g. .gitconfig)
+#   |- configs: folder containing optional tool configurations files (e.g. .gitconfig, .ssh (folder), etc..)
 #
 # The files found in "configs" folders are automatically copied with the same name in the home-folder of the
 # docker container from the ".emacs" in it.
@@ -107,6 +107,12 @@ RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 RUN apt update && apt install -y python3-pip && python3 -m pip install --upgrade pip
 RUN python3 -m pip install mypy pylint flake8
 
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
+    && gpg --import ~/_gnuring.gpg
+
+# install hunspell, configure the locale to select a default dictionary
+ENV LANG="en_US.UTF-8"
 RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
 
 # add a defualt ".emacs" file to the image home dir such that the hosted one is read from the store
@@ -116,25 +122,15 @@ COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
 WORKDIR ${EMACS_ROOT}
 ENV PATH="${EMACS_BIN}/bin:$PATH"
 
-
-
-# add all GNU project public keys to prevent any issue with the installation of the emacs packages
-RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
-    && gpg --import ~/_gnuring.gpg
-
 RUN apt update && apt install -y \
     htop
 
-# ==============================================================================================================
-# user commands
-USER ${UNAME}:${UNAME}
-
-# restore bash default setting TODO: these instrutions do take effect after build, execute them as
-# entry-point...
 # uncomment all alias definitions in the bashrc
+# NOTE: the "+" must be ecaped otherwise it is treated as a normal character
 RUN \
-    cp /etc/skel/.bashrc ~/ \
-    && sed -i 's/^#\s*alias\s\+l/alias l/' ~/.bashrc \
-    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
+    cp /etc/skel/.bashrc ${EMACS_ROOT}/ \
+    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_ROOT}/.bashrc \
+    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_ROOT}/.bashrc \
+    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_ROOT}/.bashrc
 
-ENV LANG="en_US.UTF-8"
+USER ${UNAME}:${UNAME}
