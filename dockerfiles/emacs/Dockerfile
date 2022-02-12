@@ -15,6 +15,10 @@
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
 #   |- .emacs.d: emacs home directory
 #   |- emacs_git: org-based configuration
+#   |- configs: folder containing optional tool configurations files (e.g. .gitconfig)
+#
+# The files found in "configs" folders are automatically copied with the same name in the home-folder of the
+# docker container from the ".emacs" in it.
 #
 # IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
 # 
@@ -65,11 +69,9 @@ RUN adduser --disabled-login --gecos "emacs server daemon,,," ${UNAME}; \
     echo "${UNAME}:${UNAME}" | chpasswd; \
     echo "root:root" | chpasswd
 
-# install tools ###############################################################
+# install basic tools
 RUN apt update \
     && apt install -y apt-utils git make file tree man nano
-
-# development libraries
 RUN apt update \
     && apt install -y bash-completion build-essential
 
@@ -91,11 +93,10 @@ RUN apt update && apt install -y \
     libselinux1-dev libharfbuzz-dev libjansson-dev libasound2-dev libmagick++-6.q16-dev libacl1-dev \
     zlib1g-dev fakeroot
 
+# install emacs
 COPY --chown=root:root support/emacs-*.tar.gz ${EMACS_BUILD}/${EMACS_ARCHIVE}
 WORKDIR ${EMACS_BUILD}
 RUN tar -xvf ${EMACS_ARCHIVE}
-
-# install emacs
 RUN cd emacs-* && ./configure --with-x --prefix=${EMACS_BIN} && make && make install
 RUN cd emacs-* && make clean
 
@@ -108,21 +109,14 @@ RUN python3 -m pip install mypy pylint flake8
 
 RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
 
-# FIXME: automate the image and dockerfile with a new layer to installing the required package (write a python
-# script wrapping around pip invokation, if the installation is successful install the package. Use it only for
-# published packages, not for developed ones, for those always use "-e install").
-
+# add a defualt ".emacs" file to the image home dir such that the hosted one is read from the store
 COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
 ENV PATH="${EMACS_BIN}/bin:$PATH"
 
-# restore bash default setting
-RUN cp /etc/skel/.bashrc ~/
-# uncomment all alias definitions in the bashrc
-RUN sed -i 's/^#\s*alias\s\+l/alias l/' ~/.bashrc
-RUN sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
+
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
@@ -131,4 +125,16 @@ RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.g
 RUN apt update && apt install -y \
     htop
 
+# ==============================================================================================================
+# user commands
 USER ${UNAME}:${UNAME}
+
+# restore bash default setting TODO: these instrutions do take effect after build, execute them as
+# entry-point...
+# uncomment all alias definitions in the bashrc
+RUN \
+    cp /etc/skel/.bashrc ~/ \
+    && sed -i 's/^#\s*alias\s\+l/alias l/' ~/.bashrc \
+    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ~/.bashrc
+
+ENV LANG="en_US.UTF-8"
