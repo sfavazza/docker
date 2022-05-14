@@ -27,6 +27,7 @@
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
 #     ...
+#     -e DISPLAY=<display address>:0.0
 #     emacs_docker:latest emacs --fg-daemon
 #
 # LINUX VERSION FOR GUI
