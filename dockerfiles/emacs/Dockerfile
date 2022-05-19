@@ -124,7 +124,8 @@ WORKDIR ${EMACS_ROOT}
 ENV PATH="${EMACS_BIN}/bin:$PATH"
 
 RUN apt update && apt install -y \
-    htop
+    htop \
+    git-lfs
 
 # uncomment all alias definitions in the bashrc
 # NOTE: the "+" must be ecaped otherwise it is treated as a normal character
