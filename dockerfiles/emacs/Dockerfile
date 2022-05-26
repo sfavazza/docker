@@ -107,6 +107,7 @@ RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 # python 3.9 is included, install pip and install support packges for elpy
 RUN apt update && apt install -y python3-pip && python3 -m pip install --upgrade pip
 RUN python3 -m pip install mypy pylint flake8
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
