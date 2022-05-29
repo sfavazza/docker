@@ -42,9 +42,11 @@
 # With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
 # terminal busy. Mapping the root to a volume in the container allows full access to the host fs.
 #
-# You can map it to a commnd in ".bashrc" writing into it:
+# The following are useful shortcuts that can be defined in ".bashrc":
 #
-#  alias dck_emacsserver='<cmd starting emacs server>'
+#  alias dck_emacsserver='docker run --rm --name emacs_docker -v ~/git/emacs_store/:/home/emacsserver/store -v /:/orig -v /tmp/.X11-unix:/tmp/.X11-unix:ro --net=host -e DISPLAY=:0 emacs_docker:latest emacs --fg-daemon'
+# alias dck_emacsserver_bash='docker exec -ti emacs_docker bash'
+# alias dck_emacsserver_clean='rm ~/git/emacs_store/.emacs.d/server/*'
 #
 # The client can be easily invoked with the following command:
 #
@@ -105,8 +107,10 @@ RUN cd emacs-* && make clean
 RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 
 # python 3.9 is included, install pip and install support packges for elpy
-RUN apt update && apt install -y python3-pip && python3 -m pip install --upgrade pip
-RUN python3 -m pip install mypy pylint flake8
+RUN apt update \
+    && apt install -y python3-pip python3-venv \
+    && python3 -m pip install --upgrade pip
+RUN python3 -m pip install mypy pylint flake8 ipython remote-pdb pre-commit
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
@@ -122,7 +126,7 @@ COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
-ENV PATH="${EMACS_BIN}/bin:$PATH"
+ENV PATH="${EMACS_BIN}/bin:${EMACS_ROOT}/.local/bin:$PATH"
 
 RUN apt update && apt install -y \
     htop \
