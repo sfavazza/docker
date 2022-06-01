@@ -1,11 +1,5 @@
 # ==================================================================================================
-#
-# File        : download_sources.sh
-#
 # Purpose     : Download the support executable for this docker image
-#
-# Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
-# 
 # --------------------------------------------------------------------------------------------------
 #
 # Description :
@@ -17,4 +11,4 @@
 . $(pwd)/../common/common.sh
 
 # download miniconda executable
-exists_or_download "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+# exists_or_download "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"

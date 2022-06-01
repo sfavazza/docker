@@ -85,7 +85,7 @@ RUN chmod u+x /etc/profile.d/bash_completion.sh && . /etc/profile.d/bash_complet
 # of the emacs package, to find it follow the steps below:
 # 1. go to the debian package tracker: https://tracker.debian.org/pkg/emacs
 # 2. click on the maintainer name
-# 3. click on the buildd of interest
+# 3. click on the build of interest
 
 # install emacs dependencies
 RUN apt update && apt install -y \
@@ -122,7 +122,7 @@ ENV LANG="en_US.UTF-8"
 RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
 
 # add a defualt ".emacs" file to the image home dir such that the hosted one is read from the store
-COPY --chown=emacsserver:emacsserver .emacs ${EMACS_ROOT}/
+COPY --chown=${UNAME}:${UNAME} .emacs ${EMACS_ROOT}/
 
 # add commands to the user path
 WORKDIR ${EMACS_ROOT}
