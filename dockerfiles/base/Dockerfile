@@ -4,10 +4,10 @@
 
 FROM debian:bullseye
 
-# local variables used at build time
+# Local variables used at build time (WARNING: the "ARG" def are available only at the building stage, they must
+# be re-defined as required in child images).
 ARG UNAME=developer
 ARG UNAME_ROOT=/home/${UNAME}
-ARG JOB_WORK_DIR=/home/${UNAME}/work
 
 # add a new user and change the root password
 RUN adduser --disabled-login --gecos "Simply a developer,,," ${UNAME}; \
@@ -37,7 +37,7 @@ RUN \
     && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${UNAME_ROOT}/.bashrc
 
 # NOTE: always set the developer user as starting working folder, but do not set the user unless for a job image
-WORKDIR $JOB_WORK_DIR
+WORKDIR ${UNAME_ROOT}
 
 ENV PATH="${UNAME_ROOT}/.local/bin:$PATH"
 
