@@ -87,7 +87,7 @@ RUN chmod u+x /etc/profile.d/bash_completion.sh && . /etc/profile.d/bash_complet
 # 3. click on the build of interest
 
 # install emacs dependencies
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     libncurses5-dev texinfo liblockfile-dev librsvg2-dev dbus-x11 git gnupg-agent libgif-dev \
     libtiff-dev libsystemd-dev procps xaw3dg-dev libpng-dev libjpeg-dev libm17n-dev libotf-dev \
     libgpm-dev libdbus-1-dev autoconf automake dpkg-dev quilt debhelper \
@@ -106,8 +106,8 @@ RUN cd emacs-* && make clean
 RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 
 # python 3.9 is included, install pip and install support packges for elpy
-RUN apt update \
-    && apt install -y python3-pip python3-venv \
+RUN apt-get update \
+    && apt-get install -y python3-pip python3-venv \
     && python3 -m pip install --upgrade pip
 # NOTE: install the bare minimum set of packages, elpy will install its own virt env for inline checking. While
 # all other packages that might be needed by a script, should be installed in a dedicated virtual environment.
@@ -120,7 +120,7 @@ RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.g
 
 # install hunspell, configure the locale to select a default dictionary
 ENV LANG="en_US.UTF-8"
-RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
+RUN apt-get update && apt-get install -y hunspell hunspell-en-us hunspell-it
 
 # add a defualt ".emacs" file to the image home dir such that the hosted one is read from the store
 COPY --chown=${UNAME}:${UNAME} .emacs ${EMACS_ROOT}/
@@ -129,9 +129,15 @@ COPY --chown=${UNAME}:${UNAME} .emacs ${EMACS_ROOT}/
 WORKDIR ${EMACS_ROOT}
 ENV PATH="${EMACS_BIN}/bin:${EMACS_ROOT}/.local/bin:$PATH"
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     htop \
     git-lfs
+
+# configure the credential helper for git
+RUN apt-get update && apt-get install -y \
+    libsecret-1-0 \
+    libsecret-1-dev
+RUN cd /usr/share/doc/git/contrib/credential/libsecret/ && make
 
 # uncomment all alias definitions in the bashrc
 # NOTE: the "+" must be ecaped otherwise it is treated as a normal character
