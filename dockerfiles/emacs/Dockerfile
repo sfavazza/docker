@@ -22,22 +22,21 @@
 #
 # IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
 # 
-# WINDOWS VERSION
 # $ docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
-#     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
-#     ...
+#     -v <virtual env folder>:/home/emacsserver/.virtualenvs \
 #     -e DISPLAY=<display address>:0.0
-#     emacs_docker:latest emacs --fg-daemon
-#
-# LINUX VERSION FOR GUI
-# sudo docker run --rm --name emacs_docker \
-#     -v <path to the "store" folder>:/home/emacsserver/store \
+# (linux)
 #     -v <host root fs>:/orig \
 #     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
 #     --net=host \
-#     -e DISPLAY=:0 \
-#      emacs_docker:latest emacs --fg-daemon
+# -------
+# (windows)
+#     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
+# ---------
+#     ...
+#     emacs_docker:latest emacs --fg-daemon
+#
 #
 # With the foreground-daemon option the docker will remain runnuning in background as the emacs daemon keeps its
 # terminal busy. Mapping the root to a volume in the container allows full access to the host fs.
@@ -110,7 +109,9 @@ RUN cd ${EMACS_BUILD}/.. && rm -rf ${EMACS_BUILD}
 RUN apt update \
     && apt install -y python3-pip python3-venv \
     && python3 -m pip install --upgrade pip
-RUN python3 -m pip install mypy pylint flake8 ipython remote-pdb pre-commit
+# NOTE: install the bare minimum set of packages, elpy will install its own virt env for inline checking. While
+# all other packages that might be needed by a script, should be installed in a dedicated virtual environment.
+RUN python3 -m pip install ipython remote-pdb
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
