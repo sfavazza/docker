@@ -18,6 +18,8 @@
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
 #   |- your GPG key to use for the GCM (it shall end in .gcm), the script is in this repo under
 #   |  dockerfiles/emacs/support/initscript.sh
+#   |- precommit_cache: folder where pre-commit initialize its environment (faster over multiple emacs server
+#   |  invocations)
 #   |- .emacs.d: emacs home directory
 #   |- emacs_git: org-based configuration
 #   `- configs: folder containing optional tool configurations files (e.g. .gitconfig, .ssh (folder), etc..)
@@ -30,6 +32,7 @@
 # $ docker run --rm --name emacs_docker \
 #     -v <path to the "store" folder>:/home/emacsserver/store \
 #     -v <virtual env folder>:/home/emacsserver/.virtualenvs \
+#     -v precommit_cache:/home/emacsserver/.cache
 #     -e DISPLAY=<display address>:0
 # (linux)
 #     -v <host root fs>:/orig \
@@ -131,7 +134,7 @@ RUN apt update \
     && python3 -m pip install --upgrade pip
 # NOTE: install the bare minimum set of packages, elpy will install its own virt env for inline checking. While
 # all other packages that might be needed by a script, should be installed in a dedicated virtual environment.
-RUN python3 -m pip install ipython remote-pdb
+RUN python3 -m pip install ipython remote-pdb mypy pylint flake8 virtualenv
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
