@@ -18,7 +18,7 @@
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
 #   |- your GPG key to use for the GCM (it shall end in .gcm), the script is in this repo under
 #   |  dockerfiles/emacs/support/initscript.sh
-#   |- precommit_cache: folder where pre-commit initialize its environment (faster over multiple emacs server
+#   |- .precommit_cache: folder where pre-commit initialize its environment (faster over multiple emacs server
 #   |  invocations)
 #   |- .emacs.d: emacs home directory
 #   |- emacs_git: org-based configuration
@@ -27,23 +27,8 @@
 # The files found in "configs" folders are automatically copied with the same name in the home-folder of the
 # docker container from the ".emacs" in it.
 #
-# IMPORTANT: remove the old emacs-server authentication file rm -rf <path to docker .emacs.d>/.emacs.d/server/*
-#
-# $ docker run --rm --name emacs_docker \
-#     -v <path to the "store" folder>:/home/emacsserver/store \
-#     -v <virtual env folder>:/home/emacsserver/.virtualenvs \
-#     -v precommit_cache:/home/emacsserver/.cache
-#     -e DISPLAY=<display address>:0
-# (linux)
-#     -v <host root fs>:/orig \
-#     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-#     --net=host \
-# -------
-# (windows)
-#     -v <Any drive to work on>:/<drive letter> <-- any drive to work on
-# ---------
-#     ...
-#     emacs_docker:latest emacs --fg-daemon
+# IMPORTANT: remove the old emacs-server authentication file before starting a new Emacs-server instance (this
+# should be done when abruptly quitting Emacs) "rm -rf <path to docker .emacs.d>/.emacs.d/server/*".
 #
 # The display address should be the one of the machine hosting a X11-server. The value after the colon is the
 # display number, when '0' the default display is used.
@@ -54,11 +39,9 @@
 # To complete the setup, after starting the emacs-server make sure to execute, as super-user, the initialization
 # script (initscript.sh) as root in a separate terminal.
 #
-# The following are useful shortcuts that can be defined in ".bashrc":
-#
-# alias dck_emacsserver='docker run --rm --name emacs_docker -v ~/git/emacs_store/:/home/emacsserver/store -v /:/orig -v /tmp/.X11-unix:/tmp/.X11-unix:ro --net=host -e DISPLAY=:0 emacs_docker:latest emacs --fg-daemon'
-# alias dck_emacsserver_bash='docker exec -ti emacs_docker bash'
-# alias dck_emacsserver_clean='rm ~/git/emacs_store/.emacs.d/server/*'
+# Some usual shortcuts to start the Emacs server can be found in the "custom_bashrc.sh" script in the
+# git-repo. configure it according to your needs by assigning the variable inspected at the beginning of the
+# script.
 #
 # The client can be easily invoked with the following command:
 #
