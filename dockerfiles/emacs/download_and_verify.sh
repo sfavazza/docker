@@ -10,7 +10,7 @@
 
 . $(pwd)/../common/common.sh
 
-EMACS_VERSION="27.2"
+EMACS_VERSION="28.1"
 EMACS_FILENAME="emacs-${EMACS_VERSION}.tar.gz"
 echo ${EMACS_FILENAME}
 
