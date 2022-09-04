@@ -35,7 +35,7 @@ exists_or_download () {
 
     if test -f "$target_dir/$install_script"
     then
-        echo "$install_script install script has been already downloaded. Skipping..."
+        echo "$install_script file has been already downloaded. Skipping..."
     else
 
         echo "downloading $install_script in $target_dir"
