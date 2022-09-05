@@ -12,16 +12,16 @@
 
 EMACS_VERSION="28.1"
 EMACS_FILENAME="emacs-${EMACS_VERSION}.tar.gz"
-echo ${EMACS_FILENAME}
+echo "target Emacs file: ${EMACS_FILENAME}"
 
 # remove previous versions by listing all files except the ones featuring the target version
 for suffix in "" ".sig"; do
-    FILES_RM_LIST="\
-$FILES_RM_LIST $(ls support/emacs-*.tar.gz${suffix} \
-| awk -F ${EMACS_FILENAME}${suffix} '{print $1}')"
+    FILES_RM_LIST+=$(ls support/emacs-*.tar.gz${suffix} \
+                         | awk -F "support/${EMACS_FILENAME}${suffix}" '{print $1}')" "
 done
 
-rm -f FILES_RM_LIST
+echo "removing the following files: $FILES_RM_LIST"
+rm -f $FILES_RM_LIST
 
 exists_or_download "http://mirror.easyname.at/gnu/emacs/${EMACS_FILENAME}"
 exists_or_download "http://mirror.easyname.at/gnu/emacs/${EMACS_FILENAME}.sig"
