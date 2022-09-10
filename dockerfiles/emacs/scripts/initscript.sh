@@ -3,6 +3,16 @@
 # update certificates (needed for company)
 update-ca-certificates
 
+read -p "do you want to init GCM? [yY|nN] " choice
+case $choice in
+    y|Y )
+    ;;
+    * )
+        exit 0
+        ;;
+esac
+
+
 # initialize the GPG agent for GCM
 gpg --import /home/emacsserver/store/*.gcm
 

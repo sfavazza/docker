@@ -164,4 +164,7 @@ RUN \
 # add to the sudoers group
 RUN usermod -aG sudo ${UNAME}
 
+# add custom scripts
+COPY --chown=${UNAME}:${UNAME} scripts/* /usr/local/bin/
+
 USER ${UNAME}:${UNAME}
