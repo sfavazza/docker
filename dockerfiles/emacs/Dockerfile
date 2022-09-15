@@ -165,6 +165,6 @@ RUN \
 RUN usermod -aG sudo ${UNAME}
 
 # add custom scripts
-COPY --chown=${UNAME}:${UNAME} scripts/* /usr/local/bin/
+COPY scripts/* /usr/local/bin/
 
 USER ${UNAME}:${UNAME}
