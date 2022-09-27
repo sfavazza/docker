@@ -167,4 +167,6 @@ RUN usermod -aG sudo ${UNAME}
 # add custom scripts
 COPY scripts/* /usr/local/bin/
 
-USER ${UNAME}:${UNAME}
+# IMPORTANT: do not specify a group otherwise it will overwrite any other group it is added to (e.g. sudo)
+# source: https://docs.docker.com/engine/reference/builder/#user
+USER ${UNAME}
