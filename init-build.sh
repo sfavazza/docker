@@ -7,5 +7,5 @@ REQUIRE_COMMON_SCRIPTS=(emacs statistics)
 for context in ${REQUIRE_COMMON_SCRIPTS[@]}; do
     _DST=dockerfiles/$context/scripts
     mkdir -p $_DST
-    cp common_scripts/* $_DST
+    cp -u -v common_scripts/* $_DST
 done
