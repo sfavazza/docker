@@ -66,6 +66,7 @@ ARG EMACS_HOME=/home/${UNAME}
 ARG EMACS_BUILD=${EMACS_HOME}/emacs_build
 ARG EMACS_ARCHIVE=emacs.tar.gz
 ARG EMACS_BIN=${EMACS_HOME}/emacs_install
+ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
 
 # add the user group
 RUN groupadd --gid ${GID} ${UNAME}
@@ -157,9 +158,9 @@ RUN apt update && apt install -y telnet
 # NOTE: the "+" must be ecaped otherwise it is treated as a normal character
 RUN \
     cp /etc/skel/.bashrc ${EMACS_HOME}/ \
-    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_HOME}/.bashrc \
-    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_HOME}/.bashrc \
-    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_HOME}/.bashrc
+    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_BASHRC} \
+    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_BASHRC} \
+    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_BASHRC}
 
 # add to the sudoers group
 RUN usermod -aG sudo ${UNAME}
