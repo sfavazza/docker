@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Description: identify the list of virtual environments and propose the user to choose which one to be enabled.
+
 echo ""
 echo "WARNING: you must SOURCE this script!"
 

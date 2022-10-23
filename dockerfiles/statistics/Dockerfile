@@ -20,4 +20,7 @@ RUN \
     cd ${TA_LIB} && ./configure && make && make install
 RUN cd ${UNAME_ROOT} && rm -rf ${TA_LIB}
 
-USER ${UNAME}:${UNAME}
+# add custom scripts
+COPY scripts/* /usr/local/bin/
+
+USER ${UNAME}

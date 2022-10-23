@@ -9,7 +9,7 @@ current folder.
 Under `dockerfiles` folder are stored all the folders which in turn contain the docker file describing a specific
 image and the necessary sources needed with them (if not a script to recover them from Internet).
 
-## Install ##
+## Install Docker ##
 
 On Debian is available a dedicated *.deb package. Follow the instructions at [this
 page](https://docs.docker.com/engine/install/debian/).
@@ -25,7 +25,7 @@ This can be achieved by adding the following line to the `/etc/fstab` file:
 <large_space_folder> /var/lib/docker/ none defaults,bind 0 0
 ```
 
-## Uninstall ##
+## Uninstall Docker ##
 
 To uninstall a docker installation execute the following command:
 
@@ -59,15 +59,19 @@ Remember to logout and login again in your user account for this setting to take
 
 ### Build Images ###
 
-The simplest is to create the image based on the docker file found in the building folder (the one from which
-the context is taken and sent to the docker daemon):
+Before building an image be sure to execute the initialization script that copies the common scripts in the
+**scripts** sub-folders of each target-image. Hence the usual command to build the image itself:
 
 ``` shell
+./init-build.sh
 sudo docker build -t <name-image>:<tag> <context-source>
 ```
 
-Where the `<context-source>` is the folder from which the docker daemon will get its context, normally is set to
-the current folder `.` (dot).
+Where the `<context-source>` is the folder from which the docker daemon will get its context,
+i.e. `./dockerfiles/<target-context>`.
+
+The initialization script copies the scripts only in those targets that require them. To add a new environment
+to the list modify the _init-build.sh_ script.
 
 ### Running Images ###
 
