@@ -16,8 +16,8 @@
 # emacsclient (both in background to not open too many terminals). Create the following structure:
 # - store
 #   |- init_emacs.el: dot-emacs file being loaded by the .emacs file in the container
-#   |- your GPG key to use for the GCM (it shall end in .gcm), the script is in this repo under
-#   |  dockerfiles/emacs/support/initscript.sh
+#   |- your text-armored GPG key (with both private & public keys) to use for the GCM (it shall end in .gcm),
+#   |  the script is in this repo under dockerfiles/emacs/support/initscript.sh
 #   |- .precommit_cache: folder where pre-commit initialize its environment (faster over multiple emacs server
 #   |  invocations)
 #   |- .emacs.d: emacs home directory

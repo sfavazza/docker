@@ -12,10 +12,11 @@ case $choice in
         ;;
 esac
 
+KEY_ID=$(gpg --import /home/emacsserver/store/*.gcm 2>&1 \
+             | grep -m 1 -o -E "gpg: key ([[:xdigit:]]+)" \
+             | awk '{print $3}')
+echo "imported key with parsed ID: $KEY_ID "
 
-# initialize the GPG agent for GCM
-gpg --import /home/emacsserver/store/*.gcm
-
-# Use grep and awk to extract the key ID (most probably it can be achieved in an easier way, but for now should
-# suffice).
-pass init $(gpg --list-secret-keys --keyid-format LONG | grep --only-matching -E "(sec[[:space:]]*[a-z0-9]*/)([A-F0-9]+)" | awk 'split($0, A, "/") { print A[2] }')
+# initialize the GPG agent for GCM. Exploit the output to get the key ID (using grep and awk)
+# NOTE: copy the error descriptor (fid: 2) to the stdout (fid: 1) to capture the GPG command output
+pass init $KEY_ID
