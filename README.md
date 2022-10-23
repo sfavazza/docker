@@ -6,8 +6,11 @@ current folder.
 
 ## Repository Structure ##
 
-Under `dockerfiles` folder are stored all the folders which in turn contain the docker file describing a specific
-image and the necessary sources needed with them (if not a script to recover them from Internet).
+Under `dockerfiles` folder are stored all the sub-folders named after the image they generate. Each of these
+sub-folders contains the self-comprehensive build context imported by docker during a build task.
+
+To ease a post-configuration of an image is possible to create ad-hoc configuration files from the
+`conf_template` folder (e.g. ssh host configurations).
 
 ## Install Docker ##
 

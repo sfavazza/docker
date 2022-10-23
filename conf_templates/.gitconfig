@@ -1,0 +1,10 @@
+[credential]
+  # path pointing to the GCM tool normally:
+  # /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+	helper = <GCM-path>
+[user]
+	name = <user name>
+	email = <user email>
+  signingkey = <key-id provided by GPG import command, check the emacs init script>
+[status]
+	showUntrackedFiles = all

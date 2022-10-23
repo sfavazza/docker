@@ -1,0 +1,9 @@
+Host private
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/keys/github-personal/github_id_rsa.priv
+
+Host company
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/keys/company/company_id_rsa.priv
