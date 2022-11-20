@@ -24,3 +24,6 @@ RUN cd ${UNAME_ROOT} && rm -rf ${TA_LIB}
 COPY scripts/* /usr/local/bin/
 
 USER ${UNAME}
+
+# install tox (install with user privileges)
+RUN python3 -m pip install tox
