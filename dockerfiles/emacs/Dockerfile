@@ -154,6 +154,9 @@ RUN git-credential-manager-core configure && apt update && apt install -y pass
 # allow python to debug in remote mode
 RUN apt update && apt install -y telnet
 
+# debugging
+RUN apt update && apt install -y gdb
+
 # uncomment all alias definitions in the bashrc
 # NOTE: the "+" must be ecaped otherwise it is treated as a normal character
 RUN \
