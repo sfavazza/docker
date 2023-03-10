@@ -143,13 +143,13 @@ RUN apt update && apt install -y \
 # install and configure the GCM (Git Credential Manager) service
 # NOTE: to complete the configuration it is required that the .gitconfig is prepared accordingly (use the
 # emacs_git/linux/.gitconfig example as a start).
-ARG GCM_INST_SCRIPT="install-from-source.sh"
-RUN curl -LO \
-    https://raw.githubusercontent.com/GitCredentialManager/git-credential-manager/main/src/linux/Packaging.Linux/${GCM_INST_SCRIPT}
-RUN chmod u+x ${GCM_INST_SCRIPT} \
-    && ./${GCM_INST_SCRIPT} -y \
-    rm ${GCM_INST_SCRIPT}
-RUN git-credential-manager-core configure && apt update && apt install -y pass
+# ARG GCM_INST_SCRIPT="install-from-source.sh"
+# RUN curl -LO \
+#     https://raw.githubusercontent.com/GitCredentialManager/git-credential-manager/main/src/linux/Packaging.Linux/${GCM_INST_SCRIPT}
+# RUN chmod u+x ${GCM_INST_SCRIPT} \
+#     && ./${GCM_INST_SCRIPT} -y \
+#     rm ${GCM_INST_SCRIPT}
+# RUN git-credential-manager-core configure && apt update && apt install -y pass
 
 # allow python to debug in remote mode
 RUN apt update && apt install -y telnet

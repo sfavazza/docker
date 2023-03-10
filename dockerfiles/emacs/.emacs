@@ -11,13 +11,13 @@
 
 ;;; Commentary:
 
-;; Emacs looks for initialization files in multiple locations, the first is ~/.emacs. To allow changes to it
-;; without adding another layer to the docker image. This file is copied and committed in the docker image to
-;; load the real .emacs file from the host folder mapped into the docker container file-system.
+;; Emacs looks for initialization files in multiple locations, the first being ~/.emacs. To prevent adding new
+;; layers to the emacs-image for every customization, a simple .emacs file is committed in the image which in
+;; turn sources an external file on the host and mapped into the docker container file-system.
 
 ;;; Code:
 
-(setq EMACSD_HOME "~/store/.emacs.d/")
+(setq EMACSD_HOME "~/.emacs.d/")
 (setq user-emacs-directory EMACSD_HOME)
 
 (unless (file-exists-p "~/store/emacs_git/.setup-complete")
