@@ -23,8 +23,9 @@
 (unless (file-exists-p "~/store/emacs_git/.setup-complete")
   (load-file "~/store/emacs_git/all_package_install.el"))
 
-;; copy the ~/store/configs content to the ~/ folder
-(copy-directory "~/store/configs" "~/" nil nil t)
+;; copy the ~/store/configs content to the ~/ folder (check if at least one known folder is present
+(unless (file-exists-p "~/.ssh")
+  (copy-directory "~/store/configs" "~/" nil nil t))
 
 ;; load the emacs configuration file found in the store/ folder mapped from the host fs
 (load-file "~/store/init_emacs.el")
