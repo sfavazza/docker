@@ -129,7 +129,7 @@ RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.g
 ENV LANG="en_US.UTF-8"
 RUN apt update && apt install -y hunspell hunspell-en-us hunspell-it
 
-# add a defualt ".emacs" file to the image home dir such that the hosted one is read from the store
+# add a default ".emacs" file to the image home dir such that the hosted one is read from the store
 COPY --chown=${UNAME}:${UNAME} .emacs ${EMACS_HOME}/
 
 # add commands to the user path
