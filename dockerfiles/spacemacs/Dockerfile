@@ -4,8 +4,16 @@
 # To build ensure to indicate the tag of an existing Emacs docker image build
 # ==============================================================================================================
 
-# build with:
+# INSTRUCTIONS:
+#
+# Building
 # docker build --build-arg EMACS_TAG=<tag>
+
+# First setup
+# create the following structure:
+# - <spacemacs-folder>/
+#   - .emacs.d/ (empty-dir)
+#   - .spacemacs (auto-generated or your file)
 ARG EMACS_TAG
 
 FROM emacs_docker:${EMACS_TAG}
