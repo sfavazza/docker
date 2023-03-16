@@ -5,7 +5,7 @@
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t emacs_docker:latest .
+# $ docker build --build-arg GID=$(id -g) UID=$(id -u) DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3) -t emacs_docker:latest .
 #
 # Where GID and UID are required only if it is required that the default user in the docker image
 # inherits the same rights as the user building the image.
@@ -170,6 +170,31 @@ RUN usermod -aG sudo ${UNAME}
 
 # add custom scripts
 COPY scripts/* /usr/local/bin/
+
+# add docker (source: https://docs.docker.com/engine/install/debian/#install-using-the-repository)
+RUN apt update && apt install -y \
+  ca-certificates \
+  lsb-release
+RUN mkdir -m 0755 -p /etc/apt/keyrings \
+  && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt update && apt install -y \
+  docker-ce \
+  docker-ce-cli \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
+
+# It is not guaranteed that the "docker" group ID between host and image are consistent. Change the value here
+# according to the one from host (user provided via --build-arg).
+# This is required to add the user to the "docker" group and be able to run docker w/o sudo privileges.
+ARG DOCKER_GROUP_ID
+RUN groupmod -g ${DOCKER_GROUP_ID} docker \
+  && usermod -aG docker ${UNAME}
 
 # IMPORTANT: do not specify a group otherwise it will overwrite any other group it is added to (e.g. sudo)
 # source: https://docs.docker.com/engine/reference/builder/#user
