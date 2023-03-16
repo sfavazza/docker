@@ -199,3 +199,5 @@ RUN groupmod -g ${DOCKER_GROUP_ID} docker \
 # IMPORTANT: do not specify a group otherwise it will overwrite any other group it is added to (e.g. sudo)
 # source: https://docs.docker.com/engine/reference/builder/#user
 USER ${UNAME}
+
+# for a containerized debugging experience: https://emacs-lsp.github.io/lsp-mode/tutorials/docker-integration/
