@@ -20,9 +20,25 @@ FROM emacs_docker:${EMACS_TAG}
 
 USER root
 
-# remove default .emacs
+RUN apt update && apt install -y \
+    ripgrep \
+    zip
+
 ARG UNAME=emacsserver
 ARG EMACS_HOME=/home/${UNAME}
+
+# remove default .emacs
 RUN rm ${EMACS_HOME}/.emacs
 
+# provided that the 'org' layer is enabled, this has a conflict with the emacs shipped version of org-mode.
+# Hence move the legacy 'org' package such that emacs cannot find it.
+RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
+    && mv org _back.org
+
 USER ${UNAME}
+
+# install Nerd and NanumGothic fonts
+COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
+RUN cd ${EMACS_HOME}/.fonts \
+    && for archive in $(ls *.zip); do unzip $archive; done \
+    && fc-cache -fv
