@@ -7,7 +7,7 @@
 # INSTRUCTIONS:
 #
 # Building
-# docker build --build-arg EMACS_TAG=<tag>
+# docker build --build-arg EMACS_TAG=<tag> -t spacemacs:<tag> .
 
 # First setup
 # create the following structure:
@@ -34,6 +34,11 @@ RUN rm ${EMACS_HOME}/.emacs
 # Hence move the legacy 'org' package such that emacs cannot find it.
 RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
     && mv org _back.org
+
+# add tools for terminal layer
+RUN apt update && apt install -y \
+    libtool-bin \
+    cmake
 
 USER ${UNAME}
 
