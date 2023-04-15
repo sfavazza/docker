@@ -5,7 +5,7 @@
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build --build-arg GID=$(id -g) UID=$(id -u) DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3) -t emacs_docker:latest .
+# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) --build-arg DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3) -t emacs_docker:latest .
 #
 # Where GID and UID are required only if it is required that the default user in the docker image
 # inherits the same rights as the user building the image.
