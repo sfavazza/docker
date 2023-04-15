@@ -40,6 +40,14 @@ RUN apt update && apt install -y \
     libtool-bin \
     cmake
 
+# add other tools
+RUN apt update && apt install -y \
+    screen \
+    npm
+
+# install language server(s)
+RUN npm install -g dockerfile-language-server-nodejs
+
 USER ${UNAME}
 
 # install Nerd and NanumGothic fonts
