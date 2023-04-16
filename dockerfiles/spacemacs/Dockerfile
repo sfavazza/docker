@@ -42,8 +42,10 @@ RUN apt update && apt install -y \
 
 # add other tools
 RUN apt update && apt install -y \
-    screen \
-    npm
+    screen
+
+# manually install nodejs and npm (package manager holds an old version)
+RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
 
 # install language server(s)
 RUN npm install -g dockerfile-language-server-nodejs
