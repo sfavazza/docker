@@ -38,6 +38,7 @@ RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
 # add tools for terminal layer
 RUN apt update && apt install -y \
     libtool-bin \
+    libvterm-dev \
     cmake
 
 # add other tools

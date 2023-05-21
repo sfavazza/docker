@@ -2,7 +2,7 @@
 # Purpose: build an environment suitable for statistical study
 # ==============================================================================================================
 
-from base:latest
+FROM base:latest
 
 ARG UNAME=developer
 ARG UNAME_ROOT=/home/${UNAME}
