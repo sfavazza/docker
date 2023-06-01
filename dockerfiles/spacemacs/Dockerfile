@@ -69,6 +69,9 @@ RUN apt update && apt install -y \
 
 RUN usermod -aG dialout ${UNAME}
 
+RUN apt update && apt install -y \
+    direnv
+
 USER ${UNAME}
 
 # install Nerd and NanumGothic fonts
