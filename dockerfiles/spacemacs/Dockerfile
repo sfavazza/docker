@@ -45,11 +45,29 @@ RUN apt update && apt install -y \
 RUN apt update && apt install -y \
     screen
 
+# tools to render and preview markdown files
+RUN apt update && apt install -y \
+    pandoc \
+    firefox-esr \
+    libxss-dev \
+    libnss3
+
 # manually install nodejs and npm (package manager holds an old version)
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
 
+# github flavored markdown renderer
+RUN npm install -g vmd
+
 # install language server(s)
 RUN npm install -g dockerfile-language-server-nodejs
+
+# install clangd and bear (for compilation commands)
+RUN apt update && apt install -y \
+    clangd-11 \
+    bear \
+    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-11 100
+
+RUN usermod -aG dialout ${UNAME}
 
 USER ${UNAME}
 
