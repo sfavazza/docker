@@ -67,6 +67,9 @@ RUN apt update && apt install -y \
     bear \
     && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-11 100
 
+# LSP support for bash scripts
+RUN npm install -g bash-language-server
+
 RUN usermod -aG dialout ${UNAME}
 
 RUN apt update && apt install -y \
