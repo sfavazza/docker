@@ -72,8 +72,9 @@ RUN npm install -g bash-language-server
 
 RUN usermod -aG dialout ${UNAME}
 
-RUN apt update && apt install -y \
-    direnv
+# install direnv and hook the shell
+RUN apt update && apt install -y direnv \
+    && direnv hook bash >> ${EMACS_HOME}/.bashrc
 
 USER ${UNAME}
 
