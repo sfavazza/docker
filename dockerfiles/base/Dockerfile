@@ -39,9 +39,19 @@ RUN \
 # NOTE: always set the developer user as starting working folder, but do not set the user unless for a job image
 WORKDIR ${UNAME_ROOT}
 
-# reconfigure "dash" such that "sh" invokes "bash"
+# Reconfigure "dash" such that "sh" invokes "bash". Source:
+# https://superuser.com/questions/715722/how-to-do-dpkg-reconfigure-dash-as-bash-automatically#comment915691_715790
 RUN echo "dash dash/sh boolean false" | debconf-set-selections \
     && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
+# configure timezone (use US by default)
+RUN apt update \
+    && apt install -y locales \
+    && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
+    && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 ENV PATH="${UNAME_ROOT}/.local/bin:$PATH"
 
