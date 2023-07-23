@@ -39,6 +39,10 @@ RUN \
 # NOTE: always set the developer user as starting working folder, but do not set the user unless for a job image
 WORKDIR ${UNAME_ROOT}
 
+# reconfigure "dash" such that "sh" invokes "bash"
+RUN echo "dash dash/sh boolean false" | debconf-set-selections \
+    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
 ENV PATH="${UNAME_ROOT}/.local/bin:$PATH"
 
 # --------------------------------------------------------------------------------------------------------------
