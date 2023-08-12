@@ -83,6 +83,25 @@ RUN apt update && apt install -y \
 
 # configure locales
 RUN apt update && apt install -y locales
+
+#==============================================================================================================
+#FIXME: this duplicate part of the "base" Dockerfile, this configuration should be based on the "base"
+# configuration.
+# Reconfigure "dash" such that "sh" invokes "bash". Source:
+# https://superuser.com/questions/715722/how-to-do-dpkg-reconfigure-dash-as-bash-automatically#comment915691_715790
+RUN echo "dash dash/sh boolean false" | debconf-set-selections \
+    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
+# configure timezone (use US by default)
+RUN apt update \
+    && apt install -y locales \
+    && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
+    && locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+#==============================================================================================================
+
 USER ${UNAME}
 
 # install Nerd and NanumGothic fonts

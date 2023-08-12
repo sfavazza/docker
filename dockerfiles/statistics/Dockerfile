@@ -2,7 +2,7 @@
 # Purpose: build an environment suitable for statistical study
 # ==============================================================================================================
 
-FROM base:latest
+FROM base:0.2
 
 ARG UNAME=developer
 ARG UNAME_ROOT=/home/${UNAME}
@@ -27,3 +27,7 @@ USER ${UNAME}
 
 # install tox (install with user privileges)
 RUN python3 -m pip install tox
+
+# expecting an host folder mapped to .venv where installing the virtual environment
+ENV VIRTUAL_ENV=${UNAME_ROOT}/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
