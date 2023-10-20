@@ -23,11 +23,7 @@ RUN cd ${UNAME_ROOT} && rm -rf ${TA_LIB}
 # add custom scripts
 COPY scripts/* /usr/local/bin/
 
+# ps command
+RUN apt update && apt install -y procps
+
 USER ${UNAME}
-
-# install tox (install with user privileges)
-RUN python3 -m pip install tox
-
-# expecting an host folder mapped to .venv where installing the virtual environment
-ENV VIRTUAL_ENV=${UNAME_ROOT}/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
