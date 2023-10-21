@@ -1,49 +1,159 @@
-# ==============================================================================================================
-# Custom build for doom-emacs
+# ==================================================================================================
 #
-# To build ensure to indicate the tag of an existing Emacs docker image build
-# ==============================================================================================================
-
-# INSTRUCTIONS:
+# Purpose     : Single image for spacemacs
 #
-# Building
-# docker build --build-arg EMACS_TAG=<tag> -t spacemacs:<tag> .
+# How To Build:
+#
+# $ cd <this folder>
+# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) --build-arg DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3) -t spacemacs:<tag> .
+#
+# Where GID and UID are required only if it is required that the default user in the docker image
+# inherits the same rights as the user building the image.
+#
+# How To Use It
+#
+# Create two new commands in your OS, one to invoke the emacs-daemon in the docker, the other one to invoke an
+# emacsclient (both in background to not open too many terminals). Create the following structure:
+# - store
+#   |- .precommit_cache: folder where pre-commit initialize its environment (faster over multiple emacs server
+#   |  invocations)
+#   |- emacs_git: org-based configuration
+#   `- configs: folder containing optional tool configurations files (e.g. .gitconfig, .ssh (folder), etc..)
+#
+# Checkout the spacemacs repository in a folder ".emacs.d" and map it to $HOME/.emacs.d in the container.
+#
+# The files found in "configs" shall be mapped in under the home directory in the docker image.
+#
+# The display address should be the one of the machine hosting a X11-server. The value after the colon is the
+# display number, when '0' the default display is used.
+#
+# Some usual shortcuts to start the Emacs server can be found in the "custom_bashrc.sh" script in the emacs_git
+# repo. Configure it according to your needs by assigning the variable inspected at the beginning of the script.
+#
+# --------------------------------------------------------------------------------------------------------------
+#
+#
+# Author(s)   : Samuele FAVAZZA (sfavazza.github@gmail.com)
+#
+# =================================================================================================
 
-# First setup
-# create the following structure:
-# - <spacemacs-folder>/
-#   - .emacs.d/ (empty-dir)
-#   - .spacemacs (auto-generated or your file)
-ARG EMACS_TAG
 
-FROM emacs_docker:${EMACS_TAG}
+# debian 12
+ARG DEBIAN_VER_NAME=bookworm
+FROM debian:${DEBIAN_VER_NAME}
 
-USER root
+#==============================================================================================================
+# PRELIMINARY DEFINITIONS
+#==============================================================================================================
 
-RUN apt update && apt install -y \
-    ripgrep \
-    zip
+# Default group and user IDs, to build the container having the same rights of the user building it. Provide the
+# desired values via the docker-build command.
+ARG GID=1000
+ARG UID=1000
+# It is not guaranteed that the "docker" group ID between host and image are consistent. Change the value here
+# according to the one from host (user provided via --build-arg).
+# This is required to add the user to the "docker" group and be able to run docker w/o sudo privileges.
+ARG DOCKER_GROUP_ID=998
 
-ARG UNAME=emacsserver
+# local variables used at build time
+ARG UNAME=esrv
 ARG EMACS_HOME=/home/${UNAME}
+ARG EMACS_BUILD=${EMACS_HOME}/emacs_build
+ARG EMACS_ARCHIVE=emacs.tar.gz
+ARG EMACS_BIN=${EMACS_HOME}/emacs_install
+ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
+ARG HHOME=/home/sfavazza
 
-# remove default .emacs
-RUN rm ${EMACS_HOME}/.emacs
+#==============================================================================================================
+# HANDLE USERS AND GROUPS
+#==============================================================================================================
+# add the user group
+RUN groupadd --gid ${GID} ${UNAME}
+# add a new user and change the root password
+RUN useradd \
+    -d ${EMACS_HOME} --create-home \
+# this option is important to prevent the command from creating huge files (which make the docker builder
+# hang) when the GID/UID values are big.
+    --no-log-init \
+    --gid ${GID} --uid ${UID} \
+    --skel /etc/skel --shell /bin/bash \
+    ${UNAME}
+RUN echo "${UNAME}:${UNAME}" | chpasswd && echo "root:root" | chpasswd
+# add to the sudoers group
+RUN usermod -aG sudo ${UNAME}
+RUN usermod -aG dialout ${UNAME}
 
-# provided that the 'org' layer is enabled, this has a conflict with the emacs shipped version of org-mode.
-# Hence move the legacy 'org' package such that emacs cannot find it.
-RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
-    && mv org _back.org
+#==============================================================================================================
+# INSTALL EMACS
+#==============================================================================================================
+
+# install emacs 29 from backport, (source https://backports.debian.org/Instructions/)
+ARG DEBIAN_VER_NAME=bookworm
+RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
+RUN apt-get update && apt-get install -y \
+    emacs-el/${DEBIAN_VER_NAME}-backports \
+    emacs-lucid/${DEBIAN_VER_NAME}-backports
+
+#==============================================================================================================
+# ADDITIONAL PACKAGES
+#==============================================================================================================
+RUN apt-get update && apt-get install -y \
+    apt-utils \
+    git \
+    make \
+    file tree man \
+    bash-completion \
+    build-essential \
+    sudo \
+    htop \
+    git-lfs \
+    gdb \
+    ripgrep \
+    zip \
+    gnupg \
+    shellcheck \
+    iputils-ping \
+    graphviz \
+    screen
+
+# python
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    python-is-python3
+
+# add docker (source: https://docs.docker.com/engine/install/debian/#install-using-the-repository)
+RUN apt update && apt install -y \
+    ca-certificates \
+    lsb-release \
+    curl
+RUN mkdir -m 0755 -p /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt update && apt install -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin
+RUN groupmod -g ${DOCKER_GROUP_ID} docker || true \
+    && usermod -aG docker ${UNAME}
+
+# install hunspell, configure the locale to select a default dictionary
+ENV LANG="en_US.UTF-8"
+RUN apt update && apt install -y \
+    hunspell \
+    hunspell-en-us \
+    hunspell-it
 
 # add tools for terminal layer
 RUN apt update && apt install -y \
     libtool-bin \
     libvterm-dev \
     cmake
-
-# add other tools
-RUN apt update && apt install -y \
-    screen
 
 # tools to render and preview markdown files
 RUN apt update && apt install -y \
@@ -52,37 +162,45 @@ RUN apt update && apt install -y \
     libxss-dev \
     libnss3
 
-# manually install nodejs and npm (package manager holds an old version)
-RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
-
+#==============================================================================================================
+# NPM
+#==============================================================================================================
+# source: https://deb.nodesource.com/
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+    | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && NODE_MAJOR=20 \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" \
+    | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install nodejs -y
 # github flavored markdown renderer
 RUN npm install -g vmd
-
 # install language server(s)
 RUN npm install -g dockerfile-language-server-nodejs
-
-# install clangd and bear (for compilation commands)
-RUN apt update && apt install -y \
-    clangd-11 \
-    bear \
-    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-11 100
 
 # LSP support for bash scripts
 RUN npm install -g bash-language-server
 
-RUN usermod -aG dialout ${UNAME}
+# install clangd and bear (for compilation commands)
+RUN apt update && apt install -y \
+    clangd \
+    bear
 
 # install direnv and hook the shell
 RUN apt update && apt install -y direnv \
     && direnv hook bash >> ${EMACS_HOME}/.bashrc
 
-RUN apt update && apt install -y \
-    shellcheck \
-    iputils-ping \
-    graphviz
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
+    && gpg --import ~/_gnuring.gpg
 
-# configure locales
-RUN apt update && apt install -y locales
+# uncomment all alias definitions in the bashrc
+# NOTE: the "+" must be ecaped otherwise it is treated as a normal character
+RUN \
+    cp /etc/skel/.bashrc ${EMACS_HOME}/ \
+    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_BASHRC} \
+    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_BASHRC} \
+    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_BASHRC}
 
 #==============================================================================================================
 #FIXME: this duplicate part of the "base" Dockerfile, this configuration should be based on the "base"
@@ -91,7 +209,6 @@ RUN apt update && apt install -y locales
 # https://superuser.com/questions/715722/how-to-do-dpkg-reconfigure-dash-as-bash-automatically#comment915691_715790
 RUN echo "dash dash/sh boolean false" | debconf-set-selections \
     && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
-
 # configure timezone (use US by default)
 RUN apt update \
     && apt install -y locales \
@@ -102,10 +219,17 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 #==============================================================================================================
 
-USER ${UNAME}
+# # provided that the 'org' layer is enabled, this has a conflict with the emacs shipped version of org-mode.
+# # Hence move the legacy 'org' package such that emacs cannot find it.
+# RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
+#     && mv org _back.org
 
 # install Nerd and NanumGothic fonts
 COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
 RUN cd ${EMACS_HOME}/.fonts \
     && for archive in $(ls *.zip); do unzip $archive; done \
     && fc-cache -fv
+
+WORKDIR ${HHOME}
+ENV PATH="${HHOME}/.local/bin:$PATH"
+USER ${UNAME}
