@@ -5,7 +5,7 @@
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) --build-arg DOCKER_GROUP_ID=$(getent group docker | cut -d: -f3) -t spacemacs:<tag> .
+# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t spacemacs:<tag> .
 #
 # Where GID and UID are required only if it is required that the default user in the docker image
 # inherits the same rights as the user building the image.
@@ -50,10 +50,6 @@ FROM debian:${DEBIAN_VER_NAME}
 # desired values via the docker-build command.
 ARG GID=1000
 ARG UID=1000
-# It is not guaranteed that the "docker" group ID between host and image are consistent. Change the value here
-# according to the one from host (user provided via --build-arg).
-# This is required to add the user to the "docker" group and be able to run docker w/o sudo privileges.
-ARG DOCKER_GROUP_ID=998
 
 # local variables used at build time
 ARG UNAME=esrv
@@ -120,7 +116,8 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
-    python-is-python3
+    python-is-python3 \
+    python3-ipython
 
 # add docker (source: https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 RUN apt update && apt install -y \
@@ -139,8 +136,6 @@ RUN apt update && apt install -y \
     containerd.io \
     docker-buildx-plugin \
     docker-compose-plugin
-RUN groupmod -g ${DOCKER_GROUP_ID} docker || true \
-    && usermod -aG docker ${UNAME}
 
 # install hunspell, configure the locale to select a default dictionary
 ENV LANG="en_US.UTF-8"
@@ -229,6 +224,10 @@ COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
 RUN cd ${EMACS_HOME}/.fonts \
     && for archive in $(ls *.zip); do unzip $archive; done \
     && fc-cache -fv
+
+# WARNING: some group IDs are different between "bookworm" and "bullseye". In particular "docker" group on
+# "bullseye" has the value of "systemd-network" on "bookworm".
+RUN usermod -aG systemd-network ${UNAME}
 
 WORKDIR ${HHOME}
 ENV PATH="${HHOME}/.local/bin:$PATH"
