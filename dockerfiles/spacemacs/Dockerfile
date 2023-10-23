@@ -182,20 +182,11 @@ RUN apt update && apt install -y \
     bear
 
 # install direnv and hook the shell
-RUN apt update && apt install -y direnv \
-    && direnv hook bash >> ${EMACS_HOME}/.bashrc
+RUN apt update && apt install -y direnv
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
     && gpg --import ~/_gnuring.gpg
-
-# uncomment all alias definitions in the bashrc
-# NOTE: the "+" must be ecaped otherwise it is treated as a normal character
-RUN \
-    cp /etc/skel/.bashrc ${EMACS_HOME}/ \
-    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_BASHRC} \
-    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_BASHRC} \
-    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_BASHRC}
 
 #==============================================================================================================
 #FIXME: this duplicate part of the "base" Dockerfile, this configuration should be based on the "base"
@@ -231,4 +222,19 @@ RUN usermod -aG systemd-network ${UNAME}
 
 WORKDIR ${HHOME}
 ENV PATH="${HHOME}/.local/bin:$PATH"
+
+#==============================================================================================================
+# customize shell configuration
+#==============================================================================================================
+# uncomment all alias definitions in the bashrc
+# NOTE: the "+" must be ecaped otherwise it is treated as a normal character
+RUN \
+    cp /etc/skel/.bashrc ${EMACS_HOME}/ \
+    && sed -i 's/^#\s*alias\s\+l/alias l/' ${EMACS_BASHRC} \
+    && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_BASHRC} \
+    && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_BASHRC}
+
+# install direnv hook (after it is overwritten by the skel)
+RUN direnv hook bash >> ${EMACS_HOME}/.bashrc
+
 USER ${UNAME}
