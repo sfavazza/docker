@@ -117,7 +117,8 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
     python-is-python3 \
-    python3-ipython
+    python3-ipython \
+    python3-virtualenv
 
 # add docker (source: https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 RUN apt update && apt install -y \
