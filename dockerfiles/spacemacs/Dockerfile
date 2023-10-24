@@ -188,13 +188,6 @@ RUN apt update && apt install -y direnv
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
     && gpg --import ~/_gnuring.gpg
 
-#==============================================================================================================
-#FIXME: this duplicate part of the "base" Dockerfile, this configuration should be based on the "base"
-# configuration.
-# Reconfigure "dash" such that "sh" invokes "bash". Source:
-# https://superuser.com/questions/715722/how-to-do-dpkg-reconfigure-dash-as-bash-automatically#comment915691_715790
-RUN echo "dash dash/sh boolean false" | debconf-set-selections \
-    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 # configure timezone (use US by default)
 RUN apt update \
     && apt install -y locales \
@@ -203,12 +196,6 @@ RUN apt update \
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-#==============================================================================================================
-
-# # provided that the 'org' layer is enabled, this has a conflict with the emacs shipped version of org-mode.
-# # Hence move the legacy 'org' package such that emacs cannot find it.
-# RUN cd ${EMACS_HOME}/emacs_install/share/emacs/*/lisp/ \
-#     && mv org _back.org
 
 # install Nerd and NanumGothic fonts
 COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
