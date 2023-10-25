@@ -177,10 +177,11 @@ RUN npm install -g dockerfile-language-server-nodejs
 # LSP support for bash scripts
 RUN npm install -g bash-language-server
 
-# install clangd and bear (for compilation commands)
+# C/C++ support
 RUN apt update && apt install -y \
     clangd \
-    bear
+    bear \
+    cscope
 
 # install direnv and hook the shell
 RUN apt update && apt install -y direnv
