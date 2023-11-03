@@ -226,4 +226,8 @@ RUN \
 # install direnv hook (after it is overwritten by the skel)
 RUN direnv hook bash >> ${EMACS_HOME}/.bashrc
 
+RUN apt-get update && apt-get install -y \
+    iproute2 \
+    arp-scan
+
 USER ${UNAME}
