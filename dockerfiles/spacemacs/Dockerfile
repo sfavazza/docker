@@ -88,7 +88,9 @@ ARG DEBIAN_VER_NAME=bookworm
 RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
 RUN apt-get update && apt-get install -y \
     emacs-el/${DEBIAN_VER_NAME}-backports \
-    emacs-lucid/${DEBIAN_VER_NAME}-backports
+    emacs-lucid/${DEBIAN_VER_NAME}-backports \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 #==============================================================================================================
 # ADDITIONAL PACKAGES
@@ -110,7 +112,9 @@ RUN apt-get update && apt-get install -y \
     shellcheck \
     iputils-ping \
     graphviz \
-    screen
+    screen \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # python
 RUN apt-get update && apt-get install -y \
@@ -118,13 +122,17 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     python-is-python3 \
     python3-ipython \
-    python3-virtualenv
+    python3-virtualenv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # add docker (source: https://docs.docker.com/engine/install/debian/#install-using-the-repository)
 RUN apt update && apt install -y \
     ca-certificates \
     lsb-release \
-    curl
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 RUN mkdir -m 0755 -p /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 RUN echo \
@@ -136,27 +144,35 @@ RUN apt update && apt install -y \
     docker-ce-cli \
     containerd.io \
     docker-buildx-plugin \
-    docker-compose-plugin
+    docker-compose-plugin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # install hunspell, configure the locale to select a default dictionary
 ENV LANG="en_US.UTF-8"
 RUN apt update && apt install -y \
     hunspell \
     hunspell-en-us \
-    hunspell-it
+    hunspell-it \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # add tools for terminal layer
 RUN apt update && apt install -y \
     libtool-bin \
     libvterm-dev \
-    cmake
+    cmake \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # tools to render and preview markdown files
 RUN apt update && apt install -y \
     pandoc \
     firefox-esr \
     libxss-dev \
-    libnss3
+    libnss3 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 #==============================================================================================================
 # NPM
@@ -181,10 +197,14 @@ RUN npm install -g bash-language-server
 RUN apt update && apt install -y \
     clangd \
     bear \
-    cscope
+    cscope \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # install direnv and hook the shell
-RUN apt update && apt install -y direnv
+RUN apt update && apt install -y direnv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # add all GNU project public keys to prevent any issue with the installation of the emacs packages
 RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
@@ -194,7 +214,9 @@ RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.g
 RUN apt update \
     && apt install -y locales \
     && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
-    && locale-gen
+    && locale-gen \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
@@ -228,6 +250,24 @@ RUN direnv hook bash >> ${EMACS_HOME}/.bashrc
 
 RUN apt-get update && apt-get install -y \
     iproute2 \
-    arp-scan
+    arp-scan \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# WARNING: not the best idea to install random cross compiler, each system should provide the recommended
+# tool-chains.
+# # cross-compiler tool-chains
+# RUN apt-get update && apt-get install -y \
+#     binutils-arm-linux-gnueabi \
+#     binutils-arm-linux-gnueabihf \
+#     gcc-arm-linux-gnueabi \
+#     gcc-arm-linux-gnueabihf
+
+# manipulate JSON data & debug other-archs
+RUN apt-get update && apt-get install -y \
+    jq \
+    gdb-multiarch \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 USER ${UNAME}
