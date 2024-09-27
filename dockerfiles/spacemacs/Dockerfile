@@ -234,6 +234,28 @@ RUN usermod -aG systemd-network ${UNAME}
 WORKDIR ${HHOME}
 ENV PATH="${HHOME}/.local/bin:$PATH"
 
+RUN apt-get update && apt-get install -y \
+    iproute2 \
+    arp-scan \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# manipulate JSON data & debug other-archs
+RUN apt-get update && apt-get install -y \
+    jq \
+    gdb-multiarch \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# WARNING: not the best idea to install random cross compiler, each system should provide the recommended
+# tool-chains.
+# # cross-compiler tool-chains
+# RUN apt-get update && apt-get install -y \
+#     binutils-arm-linux-gnueabi \
+#     binutils-arm-linux-gnueabihf \
+#     gcc-arm-linux-gnueabi \
+#     gcc-arm-linux-gnueabihf
+
 #==============================================================================================================
 # customize shell configuration
 #==============================================================================================================
@@ -248,26 +270,7 @@ RUN \
 # install direnv hook (after it is overwritten by the skel)
 RUN direnv hook bash >> ${EMACS_HOME}/.bashrc
 
-RUN apt-get update && apt-get install -y \
-    iproute2 \
-    arp-scan \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# WARNING: not the best idea to install random cross compiler, each system should provide the recommended
-# tool-chains.
-# # cross-compiler tool-chains
-# RUN apt-get update && apt-get install -y \
-#     binutils-arm-linux-gnueabi \
-#     binutils-arm-linux-gnueabihf \
-#     gcc-arm-linux-gnueabi \
-#     gcc-arm-linux-gnueabihf
-
-# manipulate JSON data & debug other-archs
-RUN apt-get update && apt-get install -y \
-    jq \
-    gdb-multiarch \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# make sure the GPG agent works properly
+RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_HOME}/.bashrc
 
 USER ${UNAME}
