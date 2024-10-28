@@ -38,9 +38,14 @@
 # =================================================================================================
 
 
-# debian 12
-ARG DEBIAN_VER_NAME=bookworm
-FROM debian:${DEBIAN_VER_NAME}
+ARG DISTRO_NAME="ubuntu"
+ARG DISTRO_VER="22.04"
+FROM ${DISTRO_NAME}:${DISTRO_VER}
+
+# redefine as not visible when defined before the FROM instruction
+ARG DISTRO_NAME="ubuntu"
+ARG DISTRO_VER="22.04"
+
 
 #==============================================================================================================
 # PRELIMINARY DEFINITIONS
@@ -60,6 +65,9 @@ ARG EMACS_BIN=${EMACS_HOME}/emacs_install
 ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
 ARG HHOME=/home/sfavazza
 
+# user can choose a dedicated password
+ARG USER_PASSWORD=${UNAME}
+
 #==============================================================================================================
 # HANDLE USERS AND GROUPS
 #==============================================================================================================
@@ -74,7 +82,7 @@ RUN useradd \
     --gid ${GID} --uid ${UID} \
     --skel /etc/skel --shell /bin/bash \
     ${UNAME}
-RUN echo "${UNAME}:${UNAME}" | chpasswd && echo "root:root" | chpasswd
+RUN echo "${UNAME}:${USER_PASSWORD}" | chpasswd && echo "root:root" | chpasswd
 # add to the sudoers group
 RUN usermod -aG sudo ${UNAME}
 RUN usermod -aG dialout ${UNAME}
@@ -83,14 +91,76 @@ RUN usermod -aG dialout ${UNAME}
 # INSTALL EMACS
 #==============================================================================================================
 
-# install emacs 29 from backport, (source https://backports.debian.org/Instructions/)
-ARG DEBIAN_VER_NAME=bookworm
-RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
+# # install emacs 29 from backport, (source https://backports.debian.org/Instructions/)
+# ARG DEBIAN_VER_NAME=bookworm
+# RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
+# RUN apt-get update && apt-get install -y \
+#     emacs-el/${DEBIAN_VER_NAME}-backports \
+#     emacs-lucid/${DEBIAN_VER_NAME}-backports \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+
+# prerequisites
 RUN apt-get update && apt-get install -y \
-    emacs-el/${DEBIAN_VER_NAME}-backports \
-    emacs-lucid/${DEBIAN_VER_NAME}-backports \
+    curl \
+    gpg \
+    xz-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
+    && gpg --import ~/_gnuring.gpg
+
+ARG EMACS_INSTALLER_NAME="emacs-29.4"
+ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
+RUN mkdir /opt/${EMACS_INSTALLER_NAME} \
+    && cd /opt/${EMACS_INSTALLER_NAME} \
+    && curl --verbose --output ${EMACS_INSTALLER_ARCH} \
+    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH} \
+    && curl --verbose --output ${EMACS_INSTALLER_ARCH}.sig \
+    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH}.sig \
+    && gpgv --keyring ~/*.gpg ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH}
+
+ARG EMACS_SRC_DIR="emacs-sources"
+RUN cd /opt/${EMACS_INSTALLER_NAME} \
+    && mkdir ${EMACS_SRC_DIR} \
+    && tar -vxf ${EMACS_INSTALLER_ARCH} -C ${EMACS_SRC_DIR} \
+    && mkdir emacs-build #
+    # && cd emacs-build \
+    # ../${EMACS_SRC_DIR}/configure
+
+# installation prerequisites
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    texinfo \
+    pkg-config \
+    libgnutls28-dev \
+    libsystemd-dev \
+    libjansson-dev \
+    liblcms2-dev \
+    libtinfo-dev \
+    libxaw3dxft8-dev \
+    libxaw7-dev \
+    libtiff5-dev \
+    libgif-dev \
+    libharfbuzz-dev \
+    libmagick++-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# no lisp native-compilation, does not seems to have a strong impact: https://www.reddit.com/r/emacs/comments/uv49ix/i_am_curious_how_many_of_you_are_using_native/
+RUN cd /opt/${EMACS_INSTALLER_NAME}/emacs-build \
+    && ../${EMACS_SRC_DIR}/${EMACS_INSTALLER_NAME}/configure \
+    --enable-profiling \
+    --enable-checking \
+    --with-x-toolkit=lucid \
+    --with-imagemagick \
+    --with-sqlite3 \
+    --without-mailutils \
+    --without-pop \
+    && make \
+    && make install
 
 #==============================================================================================================
 # ADDITIONAL PACKAGES
@@ -98,10 +168,10 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     apt-utils \
     git \
-    make \
-    file tree man \
+    file \
+    tree \
+    man \
     bash-completion \
-    build-essential \
     sudo \
     htop \
     git-lfs \
@@ -113,6 +183,23 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     graphviz \
     screen \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# configure timezone (use US by default)
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+RUN apt update \
+    && apt install -y locales \
+    && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
+    && locale-gen \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+ENV TZ=Etc/UTC
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    tzdata \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -133,12 +220,14 @@ RUN apt update && apt install -y \
     curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-RUN mkdir -m 0755 -p /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-RUN echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-    https://download.docker.com/linux/debian \
-    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/${DISTRO_NAME}/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${DISTRO_NAME} \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt update
+
 RUN apt update && apt install -y \
     docker-ce \
     docker-ce-cli \
@@ -147,6 +236,21 @@ RUN apt update && apt install -y \
     docker-compose-plugin \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# docker group handling
+# WARNING: some group IDs are different among distros. As a work around add the main user of the image to the
+# corresponding "docker" group IDs as detected in the image itself (unfortunately this makes the build split in
+# 2 phases). The following comments show how the "docker" group on a host with <distro> is represented in the
+# this image:
+# - <distro> <release>: <group-on-host>
+    # FIXME: a more radical solution would consist in selecting the starting image based on the distribution on
+    # the host building the image
+# - debian bullseye: systemd-network
+# RUN usermod -aG systemd-network ${UNAME}
+# - ubuntu jammy: systemd-journal
+# RUN usermod -aG systemd-journal ${UNAME}
+# - same as host
+RUN usermod -aG docker ${UNAME}
 
 # install hunspell, configure the locale to select a default dictionary
 ENV LANG="en_US.UTF-8"
@@ -168,7 +272,7 @@ RUN apt update && apt install -y \
 # tools to render and preview markdown files
 RUN apt update && apt install -y \
     pandoc \
-    firefox-esr \
+    firefox \
     libxss-dev \
     libnss3 \
     && apt-get clean \
@@ -206,30 +310,11 @@ RUN apt update && apt install -y direnv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# add all GNU project public keys to prevent any issue with the installation of the emacs packages
-RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
-    && gpg --import ~/_gnuring.gpg
-
-# configure timezone (use US by default)
-RUN apt update \
-    && apt install -y locales \
-    && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
-    && locale-gen \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-
 # install Nerd and NanumGothic fonts
 COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
 RUN cd ${EMACS_HOME}/.fonts \
     && for archive in $(ls *.zip); do unzip $archive; done \
     && fc-cache -fv
-
-# WARNING: some group IDs are different between "bookworm" and "bullseye". In particular "docker" group on
-# "bullseye" has the value of "systemd-network" on "bookworm".
-RUN usermod -aG systemd-network ${UNAME}
 
 WORKDIR ${HHOME}
 ENV PATH="${HHOME}/.local/bin:$PATH"
