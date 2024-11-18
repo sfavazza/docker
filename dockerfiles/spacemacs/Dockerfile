@@ -46,6 +46,12 @@ FROM ${DISTRO_NAME}:${DISTRO_VER}
 ARG DISTRO_NAME="ubuntu"
 ARG DISTRO_VER="22.04"
 
+#==============================================================================================================
+# DISTRO SPECIFIC SETTINGS
+#==============================================================================================================
+# ubuntu
+# allow the installation and use of man-pages
+RUN yes | unminimize
 
 #==============================================================================================================
 # PRELIMINARY DEFINITIONS
@@ -86,6 +92,8 @@ RUN echo "${UNAME}:${USER_PASSWORD}" | chpasswd && echo "root:root" | chpasswd
 # add to the sudoers group
 RUN usermod -aG sudo ${UNAME}
 RUN usermod -aG dialout ${UNAME}
+# disable annoying info about sudo on each new shell (source: https://askubuntu.com/a/22614)
+RUN touch ${EMACS_HOME}/.sudo_as_admin_successful
 
 #==============================================================================================================
 # INSTALL EMACS
@@ -140,12 +148,14 @@ RUN apt-get update && apt-get install -y \
     libjansson-dev \
     liblcms2-dev \
     libtinfo-dev \
-    libxaw3dxft8-dev \
     libxaw7-dev \
+    xaw3dg-dev \
     libtiff5-dev \
     libgif-dev \
     libharfbuzz-dev \
     libmagick++-dev \
+    libsqlite3-dev \
+    libwebp-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -289,7 +299,13 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
     | tee /etc/apt/sources.list.d/nodesource.list \
     && apt-get update \
     && apt-get install nodejs -y
-# github flavored markdown renderer
+# github flavored markdown renderer (application & dependencies)
+RUN apt-get update && apt-get install -y \
+    libgtk-3-0 \
+    libx11-xcb1 \
+    libasound2 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 RUN npm install -g vmd
 # install language server(s)
 RUN npm install -g dockerfile-language-server-nodejs
@@ -332,6 +348,11 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# emacs doc-view dependencies (check with 'SPC SPC find-library doc-view', hence read the input)
+RUN apt-get update && apt-get install -y \
+    xpdf \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 # WARNING: not the best idea to install random cross compiler, each system should provide the recommended
 # tool-chains.
 # # cross-compiler tool-chains
