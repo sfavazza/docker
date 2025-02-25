@@ -175,6 +175,7 @@ RUN cd /opt/${EMACS_INSTALLER_NAME}/emacs-build \
 #==============================================================================================================
 # ADDITIONAL PACKAGES
 #==============================================================================================================
+# lrzsz - tools for zmodem/xmodem/ymodem file transfer - installs sx, sb, sz commands
 RUN apt-get update && apt-get install -y \
     apt-utils \
     git \
@@ -193,6 +194,7 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     graphviz \
     screen \
+    lrzsz \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -333,7 +335,6 @@ RUN cd ${EMACS_HOME}/.fonts \
     && fc-cache -fv
 
 WORKDIR ${HHOME}
-ENV PATH="${HHOME}/.local/bin:$PATH"
 
 RUN apt-get update && apt-get install -y \
     iproute2 \
@@ -373,10 +374,14 @@ RUN \
     && sed -i "s/ll='ls/ll='ls -a/" ${EMACS_BASHRC} \
     && sed -i 's/^#\s*\(export\sLS_OPTIONS\)/\1/' ${EMACS_BASHRC}
 
+# source extra configurations shared between docker and host shells (requires the definition of an OS variable
+# pointing to a folder holding only strictly shareable scripts)
+RUN echo '. $SHARED_SHELL_CFG/*' >> ${EMACS_BASHRC}
+
 # install direnv hook (after it is overwritten by the skel)
-RUN direnv hook bash >> ${EMACS_HOME}/.bashrc
+RUN direnv hook bash >> ${EMACS_BASHRC}
 
 # make sure the GPG agent works properly
-RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_HOME}/.bashrc
+RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_BASHRC}
 
 USER ${UNAME}
