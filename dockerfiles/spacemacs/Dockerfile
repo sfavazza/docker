@@ -195,6 +195,7 @@ RUN apt-get update && apt-get install -y \
     graphviz \
     screen \
     lrzsz \
+    strace \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
