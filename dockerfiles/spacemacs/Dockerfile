@@ -5,10 +5,23 @@
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t spacemacs:<tag> .
+# $ docker build --build-arg HOST_DOCKER_GID=<host-docker-gid> --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t spacemacs:<tag> .
 #
 # Where GID and UID are required only if it is required that the default user in the docker image
 # inherits the same rights as the user building the image.
+#
+# Sometimes the docker group number on the host differs from the GID in the image, also the host docker GID
+# could be assigned to another group within the image. The "HOST_DOCKER_GID" variable allows to handle the
+# situation at build time (see where it is used).
+#
+# To get the "docker" GID exec:
+#     getent group docker
+#
+# For a list of supported distro check the beginning of the script.
+# WARNING: when adding a new supported distro follow the steps below:
+# - comment the major par of the script
+# - generated uncommenting a chunk at the time
+# - hence add if/else snippets to customize for the new distro
 #
 # How To Use It
 #
@@ -37,21 +50,27 @@
 #
 # =================================================================================================
 
+# supported distros & versions
+ARG DISTRO_NAME_UBUNTU="ubuntu"
+ARG DISTRO_VER_UBUNTU="22.04"
+ARG DISTRO_NAME_DEBIAN="debian"
+ARG DISTRO_VER_DEBIAN="12"
 
-ARG DISTRO_NAME="ubuntu"
-ARG DISTRO_VER="22.04"
+ARG DISTRO_NAME=${DISTRO_NAME_DEBIAN}
+ARG DISTRO_VER=${DISTRO_VER_DEBIAN}
 FROM ${DISTRO_NAME}:${DISTRO_VER}
 
-# redefine as not visible when defined before the FROM instruction
-ARG DISTRO_NAME="ubuntu"
-ARG DISTRO_VER="22.04"
+# consume global scoped variables to access them in the stage scope (do not assign new values)
+# source: https://docs.docker.com/build/building/variables/
+ARG DISTRO_NAME
+ARG DISTRO_VER
 
 #==============================================================================================================
 # DISTRO SPECIFIC SETTINGS
 #==============================================================================================================
 # ubuntu
 # allow the installation and use of man-pages
-RUN yes | unminimize
+RUN if [ "$DISTRO_NAME" = "DISTRO_NAME_UBUNTU" ]; then yes | unminimize; fi
 
 #==============================================================================================================
 # PRELIMINARY DEFINITIONS
@@ -99,47 +118,15 @@ RUN touch ${EMACS_HOME}/.sudo_as_admin_successful
 # INSTALL EMACS
 #==============================================================================================================
 
-# # install emacs 29 from backport, (source https://backports.debian.org/Instructions/)
-# ARG DEBIAN_VER_NAME=bookworm
-# RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
-# RUN apt-get update && apt-get install -y \
-#     emacs-el/${DEBIAN_VER_NAME}-backports \
-#     emacs-lucid/${DEBIAN_VER_NAME}-backports \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-# prerequisites
+# prerequisites installation
+# NOTE: the -lxft library supporting the "freetype" is not installed in favor of configuring Emacs with "Cairo"
+# and "HarfBuzz".
+# There seems to be a reason for the libxft not to be used (see
+# /installs/emacs-29.4/emacs-sources/emacs-29.4/configure.ac:6930)
 RUN apt-get update && apt-get install -y \
     curl \
     gpg \
     xz-utils \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# add all GNU project public keys to prevent any issue with the installation of the emacs packages
-RUN curl --verbose --output ~/_gnuring.gpg https://ftp.gnu.org/gnu/gnu-keyring.gpg \
-    && gpg --import ~/_gnuring.gpg
-
-ARG EMACS_INSTALLER_NAME="emacs-29.4"
-ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
-RUN mkdir /opt/${EMACS_INSTALLER_NAME} \
-    && cd /opt/${EMACS_INSTALLER_NAME} \
-    && curl --verbose --output ${EMACS_INSTALLER_ARCH} \
-    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH} \
-    && curl --verbose --output ${EMACS_INSTALLER_ARCH}.sig \
-    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH}.sig \
-    && gpgv --keyring ~/*.gpg ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH}
-
-ARG EMACS_SRC_DIR="emacs-sources"
-RUN cd /opt/${EMACS_INSTALLER_NAME} \
-    && mkdir ${EMACS_SRC_DIR} \
-    && tar -vxf ${EMACS_INSTALLER_ARCH} -C ${EMACS_SRC_DIR} \
-    && mkdir emacs-build #
-    # && cd emacs-build \
-    # ../${EMACS_SRC_DIR}/configure
-
-# installation prerequisites
-RUN apt-get update && apt-get install -y \
     build-essential \
     texinfo \
     pkg-config \
@@ -154,23 +141,67 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     libharfbuzz-dev \
     libmagick++-dev \
-    libsqlite3-dev \
     libwebp-dev \
+    libgccjit-12-dev \
+    libotf1 \
+    libotf-dev \
+    libfreetype6 \
+    libfontconfig1 \
+    libsqlite3-dev \
+    libacl1-dev \
+    xaw3dg-dev \
+    libgpm-dev \
+    libx11-xcb-dev \
+    imagemagick \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# no lisp native-compilation, does not seems to have a strong impact: https://www.reddit.com/r/emacs/comments/uv49ix/i_am_curious_how_many_of_you_are_using_native/
-RUN cd /opt/${EMACS_INSTALLER_NAME}/emacs-build \
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+ARG GPG_KEYRING_PATH="${EMACS_HOME}/_gnuring.gpg"
+RUN curl --verbose --output ${GPG_KEYRING_PATH} https://ftp.gnu.org/gnu/gnu-keyring.gpg \
+    && gpg --import ${GPG_KEYRING_PATH}
+
+ARG EMACS_INSTALLER_NAME="emacs-29.4"
+ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
+RUN mkdir /installs \
+    && chown ${UNAME}:${UNAME} -R /installs
+USER ${UNAME}
+RUN mkdir -p /installs/${EMACS_INSTALLER_NAME} \
+    && cd /installs/${EMACS_INSTALLER_NAME} \
+    && curl --verbose --output ${EMACS_INSTALLER_ARCH} \
+    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH} \
+    && curl --verbose --output ${EMACS_INSTALLER_ARCH}.sig \
+    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH}.sig \
+    && gpgv --keyring ${GPG_KEYRING_PATH} ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH}
+
+ARG EMACS_SRC_DIR="emacs-sources"
+RUN cd /installs/${EMACS_INSTALLER_NAME} \
+    && mkdir ${EMACS_SRC_DIR} \
+    && tar -vxf ${EMACS_INSTALLER_ARCH} -C ${EMACS_SRC_DIR} \
+    && mkdir emacs-build
+
+# no lisp native-compilation, does not seems to have a strong impact:
+# https://www.reddit.com/r/emacs/comments/uv49ix/i_am_curious_how_many_of_you_are_using_native/ (enable anyway)
+ARG EMACS_INSTALL_DIR=${EMACS_HOME}/emacsinstall
+RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     && ../${EMACS_SRC_DIR}/${EMACS_INSTALLER_NAME}/configure \
+    --prefix=${EMACS_INSTALL_DIR} \
     --enable-profiling \
     --enable-checking \
+    --with-wide-int \
     --with-x-toolkit=lucid \
     --with-imagemagick \
+    --with-gconf \
     --with-sqlite3 \
+    --with-imagemagick \
+    --with-json \
     --without-mailutils \
     --without-pop \
+    --with-native-compilation \
     && make \
     && make install
+# FIXME: the tree-sitter support in debian is still in testing (2024-11-17):  --with-tree-sitter
+USER root
 
 #==============================================================================================================
 # ADDITIONAL PACKAGES
@@ -198,6 +229,13 @@ RUN apt-get update && apt-get install -y \
     strace \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# install Nerd and NanumGothic fonts
+ARG SYSTEM_FONTS_DIR="/usr/share/fonts"
+COPY support/*.zip ${SYSTEM_FONTS_DIR}
+RUN cd ${SYSTEM_FONTS_DIR} \
+    && for archive in $(ls *.zip); do unzip $archive; done \
+    && fc-cache -f -v
 
 # configure timezone (use US by default)
 ENV LANG en_US.UTF-8
@@ -250,20 +288,15 @@ RUN apt update && apt install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# docker group handling
-# WARNING: some group IDs are different among distros. As a work around add the main user of the image to the
-# corresponding "docker" group IDs as detected in the image itself (unfortunately this makes the build split in
-# 2 phases). The following comments show how the "docker" group on a host with <distro> is represented in the
-# this image:
-# - <distro> <release>: <group-on-host>
-    # FIXME: a more radical solution would consist in selecting the starting image based on the distribution on
-    # the host building the image
-# - debian bullseye: systemd-network
-# RUN usermod -aG systemd-network ${UNAME}
-# - ubuntu jammy: systemd-journal
-# RUN usermod -aG systemd-journal ${UNAME}
-# - same as host
+# handle docker group host/image issue
 RUN usermod -aG docker ${UNAME}
+ARG HOST_DOCKER_GID
+ARG HOST_DOCKER_GNAME="dockerhostgroup"
+RUN usermod -aG ${HOST_DOCKER_GID} ${UNAME} \
+    || ( \
+    groupadd --gid ${HOST_DOCKER_GID} ${HOST_DOCKER_GNAME} \
+    && usermod -aG ${HOST_DOCKER_GID} ${UNAME} \
+    )
 
 # install hunspell, configure the locale to select a default dictionary
 ENV LANG="en_US.UTF-8"
@@ -285,11 +318,20 @@ RUN apt update && apt install -y \
 # tools to render and preview markdown files
 RUN apt update && apt install -y \
     pandoc \
-    firefox \
     libxss-dev \
     libnss3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# manually install Firefox
+ARG FIREFOX_SRC_PATH="/installs/firefox-src"
+ARG FIREFOX_ARCHIVE="firefox-latest.tar.bz2"
+RUN mkdir -p ${FIREFOX_SRC_PATH} \
+    && cd ${FIREFOX_SRC_PATH} \
+    && curl -fsSL -o ${FIREFOX_ARCHIVE} \
+    "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US" \
+    && tar xvf ${FIREFOX_ARCHIVE} \
+    && ln -s $PWD/firefox/firefox /usr/bin/firefox
 
 #==============================================================================================================
 # NPM
@@ -329,13 +371,10 @@ RUN apt update && apt install -y direnv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# install Nerd and NanumGothic fonts
-COPY --chown=${UNAME}:${UNAME} support/*.zip ${EMACS_HOME}/.fonts/
-RUN cd ${EMACS_HOME}/.fonts \
-    && for archive in $(ls *.zip); do unzip $archive; done \
-    && fc-cache -fv
-
 WORKDIR ${HHOME}
+ENV PATH="${EMACS_INSTALL_DIR}/bin:$PATH"
+# use more colors than xterm when starting emacs in "-nw" mode
+ENV TERM="xterm-256color"
 
 RUN apt-get update && apt-get install -y \
     iproute2 \
