@@ -230,7 +230,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# install Nerd and NanumGothic fonts
+# install Source Code Pro fonts
 ARG SYSTEM_FONTS_DIR="/usr/share/fonts"
 COPY support/*.zip ${SYSTEM_FONTS_DIR}
 RUN cd ${SYSTEM_FONTS_DIR} \
