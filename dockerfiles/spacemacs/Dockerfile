@@ -230,7 +230,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# install Source Code Pro fonts
+# install fonts:
+# - Source Code Pro (https://github.com/adobe-fonts/source-code-pro/tree/main?tab=readme-ov-file - last release)
+# - Nanum Gothic
+# - Segoe UI emoji (https://legionfonts.com/fonts/segoe-ui-emoji)
 ARG SYSTEM_FONTS_DIR="/usr/share/fonts"
 COPY support/*.zip ${SYSTEM_FONTS_DIR}
 RUN cd ${SYSTEM_FONTS_DIR} \
@@ -423,5 +426,8 @@ RUN direnv hook bash >> ${EMACS_BASHRC}
 
 # make sure the GPG agent works properly
 RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_BASHRC}
+
+# allow locally installed binaries to be invoked
+RUN echo 'export PATH='${EMACS_HOME}'/.local/bin:$PATH' >> ${EMACS_BASHRC}
 
 USER ${UNAME}
