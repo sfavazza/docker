@@ -230,6 +230,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# IMPORTANT: the icons used in Emacs are automatically installed via 'SPC SPC all-the-icons-install-fonts'
+# (which requires a restart of the application to take effect).
 # install fonts:
 # - Source Code Pro (https://github.com/adobe-fonts/source-code-pro/tree/main?tab=readme-ov-file - last release)
 # - Nanum Gothic
@@ -374,11 +376,6 @@ RUN apt update && apt install -y direnv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR ${HHOME}
-ENV PATH="${EMACS_INSTALL_DIR}/bin:$PATH"
-# use more colors than xterm when starting emacs in "-nw" mode
-ENV TERM="xterm-256color"
-
 RUN apt-get update && apt-get install -y \
     iproute2 \
     arp-scan \
@@ -427,7 +424,10 @@ RUN direnv hook bash >> ${EMACS_BASHRC}
 # make sure the GPG agent works properly
 RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_BASHRC}
 
+WORKDIR ${HHOME}
 # allow locally installed binaries to be invoked
-RUN echo 'export PATH='${EMACS_HOME}'/.local/bin:$PATH' >> ${EMACS_BASHRC}
+ENV PATH="${EMACS_HOME}/.local/bin:${EMACS_INSTALL_DIR}/bin:$PATH"
+# use more colors than xterm when starting emacs in "-nw" mode
+ENV TERM="xterm-256color"
 
 USER ${UNAME}
