@@ -371,7 +371,7 @@ RUN apt update && apt install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# install direnv and hook the shell
+# install direnv
 RUN apt update && apt install -y direnv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -379,6 +379,7 @@ RUN apt update && apt install -y direnv \
 RUN apt-get update && apt-get install -y \
     iproute2 \
     arp-scan \
+    rsync \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
