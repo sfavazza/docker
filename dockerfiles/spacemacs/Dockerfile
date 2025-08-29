@@ -90,9 +90,6 @@ ARG EMACS_BIN=${EMACS_HOME}/emacs_install
 ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
 ARG HHOME=/home/sfavazza
 
-# user can choose a dedicated password
-ARG USER_PASSWORD
-
 #==============================================================================================================
 # HANDLE USERS AND GROUPS
 #==============================================================================================================
@@ -107,7 +104,8 @@ RUN useradd \
     --gid ${GID} --uid ${UID} \
     --skel /etc/skel --shell /bin/bash \
     ${UNAME}
-RUN echo "${UNAME}:${USER_PASSWORD}" | chpasswd && echo "root:root" | chpasswd
+RUN --mount=type=secret,id=usr-password,env=USER_PASSWORD \
+    echo "${UNAME}:${USER_PASSWORD}" | chpasswd && echo "root:${USER_PASSWORD}" | chpasswd
 # add to the sudoers group
 RUN usermod -aG sudo ${UNAME}
 RUN usermod -aG dialout ${UNAME}

@@ -8,7 +8,7 @@ set -euxo pipefail
 # FIXME: this script shall be executed only from the host as ID for the docker group on the host
 # could correspond, in the docker, to:
 # - no group at all
-# - to another group which happen to have the same ID of the docker group on the host
+# - to another group which happens to have the same ID as the docker group on the host
 #
 # In the second scenario the dockerhostgroup won't exist as an already valid GID is present in the
 # image, but the 'docker' group in the image is not guaranteed to feature the same GID as the host
@@ -23,7 +23,21 @@ docker_gid="$(stat -c '%g' /var/run/docker.sock)"
 
 read -rp 'spacemacs container tag: ' container_tag
 
+# NOTE: suspend statement printing while selecting the password
+set +x
+user_password=""
+check_password="check"
+while [ "$user_password" != "$check_password" ]; do
+    read -srp 'select password: ' user_password
+    echo ""
+    read -srp 'retype password: ' check_password
+    echo ""
+done
+export TEMP_PASSWORD=$user_password
+set -x
+
 docker build \
+       --secret id=usr-password,env=TEMP_PASSWORD \
        --build-arg HOST_DOCKER_GID="$docker_gid" \
        --build-arg GID="$(id -g)" \
        --build-arg UID="$(id -u)" \
