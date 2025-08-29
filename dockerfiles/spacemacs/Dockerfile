@@ -91,7 +91,7 @@ ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
 ARG HHOME=/home/sfavazza
 
 # user can choose a dedicated password
-ARG USER_PASSWORD=${UNAME}
+ARG USER_PASSWORD
 
 #==============================================================================================================
 # HANDLE USERS AND GROUPS
@@ -243,9 +243,9 @@ RUN cd ${SYSTEM_FONTS_DIR} \
     && fc-cache -f -v
 
 # configure timezone (use US by default)
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 RUN apt update \
     && apt install -y locales \
     && sed -i "s/^#\s*en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen \
@@ -377,6 +377,7 @@ RUN apt update && apt install -y direnv \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
+    pipx \
     iproute2 \
     arp-scan \
     rsync \
@@ -395,6 +396,18 @@ RUN apt-get update && apt-get install -y \
     xpdf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# development packages
+#   device-tree-compiler: dtc, fdtdump, etc..
+#   u-boot-tools: mkimage, dumpimage
+#   bc: dependency to build the linux kernel
+RUN apt-get update && apt-get install -y \
+    device-tree-compiler \
+    u-boot-tools \
+    bc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # WARNING: not the best idea to install random cross compiler, each system should provide the recommended
 # tool-chains.
 # # cross-compiler tool-chains
