@@ -170,7 +170,8 @@ RUN mkdir -p /installs/${EMACS_INSTALLER_NAME} \
     https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH} \
     && curl --verbose --output ${EMACS_INSTALLER_ARCH}.sig \
     https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH}.sig \
-    && gpgv --keyring ${GPG_KEYRING_PATH} ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH}
+    && gpgv --keyring ${GPG_KEYRING_PATH} ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH} \
+    && rm ${GPG_KEYRING_PATH}
 
 ARG EMACS_SRC_DIR="emacs-sources"
 RUN cd /installs/${EMACS_INSTALLER_NAME} \

@@ -2,10 +2,7 @@
 
 set -euxo pipefail
 
-# This script can be executed from a docker container, where either the "dockerhostgroup" or the a
-# group that happens to feature the same another group with the same host group ID. Consider adding
-# the user to whatever group is identified owning the host-docker-socket.
-# FIXME: this script shall be executed only from the host as ID for the docker group on the host
+# CAUTION: this script MUST be executed only from the host as ID for the docker group on the host
 # could correspond, in the docker, to:
 # - no group at all
 # - to another group which happens to have the same ID as the docker group on the host
@@ -13,10 +10,15 @@ set -euxo pipefail
 # In the second scenario the dockerhostgroup won't exist as an already valid GID is present in the
 # image, but the 'docker' group in the image is not guaranteed to feature the same GID as the host
 # GID.
-#
-# NOTE: the file is considered from a running Emacs instance mounting the host /var/run/docker.sock
-# into the container this script is executed from.
 docker_gid="$(stat -c '%g' /var/run/docker.sock)"
+
+# CAUTION: another reason to run from a host terminal is that it is not guaranteed to have all host
+# OS-variables defined in the spacemacs container.
+if [ -f "/.dockerenv" ]; then
+    echo "ERROR: this script shall be executed from host, not inside a container"
+    return 1
+fi
+
 # TEMP: keep in case discover an untested case, the one where user id corresponds to an user
 # unrecognized by the Emacs container.
 # docker_gid="$( (getent group dockerhostgroup || getent group docker) | awk -F ':' '{ print $3 }' )"
