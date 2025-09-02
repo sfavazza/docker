@@ -50,17 +50,19 @@
 #
 # =================================================================================================
 
+# IMPORTANT: need to be initialized otherwise they are not evaluated when invoking 'FROM'
+ARG DISTRO_NAME=none
+ARG DISTRO_VER=none
+FROM ${DISTRO_NAME}:${DISTRO_VER}
+
+# DANGER: anything above 'FROM' statement it won't be part of this build scope
 # supported distros & versions
 ARG DISTRO_NAME_UBUNTU="ubuntu"
 ARG DISTRO_VER_UBUNTU="22.04"
 ARG DISTRO_NAME_DEBIAN="debian"
 ARG DISTRO_VER_DEBIAN="12"
 
-ARG DISTRO_NAME=${DISTRO_NAME_DEBIAN}
-ARG DISTRO_VER=${DISTRO_VER_DEBIAN}
-FROM ${DISTRO_NAME}:${DISTRO_VER}
-
-# consume global scoped variables to access them in the stage scope (do not assign new values)
+# consume global scoped variables to access them in the stage scope (IMPORTANT: do not assign new values)
 # source: https://docs.docker.com/build/building/variables/
 ARG DISTRO_NAME
 ARG DISTRO_VER
@@ -70,7 +72,7 @@ ARG DISTRO_VER
 #==============================================================================================================
 # ubuntu
 # allow the installation and use of man-pages
-RUN if [ "$DISTRO_NAME" = "DISTRO_NAME_UBUNTU" ]; then yes | unminimize; fi
+RUN if [ "$DISTRO_NAME" = "$DISTRO_NAME_UBUNTU" ]; then yes | unminimize; fi
 
 #==============================================================================================================
 # PRELIMINARY DEFINITIONS

@@ -38,6 +38,7 @@ done
 export TEMP_PASSWORD=$user_password
 set -x
 
+# NOTE: to start from scratch use "--no-cache"
 docker build \
        --secret id=usr-password,env=TEMP_PASSWORD \
        --build-arg HOST_DOCKER_GID="$docker_gid" \
