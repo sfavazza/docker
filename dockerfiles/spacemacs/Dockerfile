@@ -142,7 +142,6 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-dev \
     libmagick++-dev \
     libwebp-dev \
-    libgccjit-12-dev \
     libotf1 \
     libotf-dev \
     libfreetype6 \
@@ -153,6 +152,12 @@ RUN apt-get update && apt-get install -y \
     libgpm-dev \
     libx11-xcb-dev \
     imagemagick \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN if [ "${DISTRO_NAME}" = "${DISTRO_NAME_UBUNTU}" ]; then GCCJIT_VER=11; else GCCJIT_VER=12; fi \
+    && apt-get update && apt-get install -y \
+    libgccjit-$GCCJIT_VER-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -184,16 +189,6 @@ RUN cd /installs/${EMACS_INSTALLER_NAME} \
 # no lisp native-compilation, does not seems to have a strong impact:
 # https://www.reddit.com/r/emacs/comments/uv49ix/i_am_curious_how_many_of_you_are_using_native/ (enable anyway)
 ARG EMACS_INSTALL_DIR=${EMACS_HOME}/emacsinstall
-# FIXME: when enabling --native-compilation the install script reports:
-#
-# 7.570 checking for gcc_jit_context_acquire in -lgccjit... no
-# 7.601 configure: error: ELisp native compiler was requested, but libgccjit was not found.
-# 7.601 Please try installing libgccjit or a similar package.
-# 7.601 If you are sure you want Emacs be compiled without ELisp native compiler,
-# 7.601 pass the --without-native-compilation option to configure.
-#
-# Though the library is installed with 'libgccjit-12-dev'. Until the issue is resolved disable this feature.
-#     --with-native-compilation \
 RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     && ../${EMACS_SRC_DIR}/${EMACS_INSTALLER_NAME}/configure \
     --prefix=${EMACS_INSTALL_DIR} \
@@ -208,6 +203,7 @@ RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     --with-json \
     --without-mailutils \
     --without-pop \
+    --with-native-compilation \
     && make \
     && make install
 # FIXME: the tree-sitter support in debian is still in testing (2024-11-17):  --with-tree-sitter
