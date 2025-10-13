@@ -1,5 +1,4 @@
 sandbox
-support
 *.log
 # add unique scripts by forcing add them in the concerning folders
 dockerfiles/*/scripts/*

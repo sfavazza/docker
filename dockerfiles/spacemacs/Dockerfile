@@ -161,24 +161,39 @@ RUN if [ "${DISTRO_NAME}" = "${DISTRO_NAME_UBUNTU}" ]; then GCCJIT_VER=11; else 
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# add all GNU project public keys to prevent any issue with the installation of the emacs packages
-ARG GPG_KEYRING_PATH="${EMACS_HOME}/_gnuring.gpg"
-RUN curl --verbose --output ${GPG_KEYRING_PATH} https://ftp.gnu.org/gnu/gnu-keyring.gpg \
-    && gpg --import ${GPG_KEYRING_PATH}
-
-ARG EMACS_INSTALLER_NAME="emacs-29.4"
-ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
 RUN mkdir /installs \
     && chown ${UNAME}:${UNAME} -R /installs
+
+# add all GNU project public keys to prevent any issue with the installation of the emacs packages
+ARG GPG_KEYRING_PATH="${EMACS_HOME}/_gnuring.gpg"
+# This http://ftpmirror.gnu.org link will automatically select the geographically closest mirror (better than
+# https://ftp.gnu.org which is often down).
+ARG GNU_MIRROR="http://ftpmirror.gnu.org"
+ARG EMACS_INSTALLER_NAME="emacs-29.4"
+ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
+# curl options:
+# - f: fail silently, i.e. do not store the error in the output file (when -o is specified), script-friendly
+# - s: silent, do not show progress meter or err messages
+# - S: show error when -s is used to show any error despite in silent mode
+# - L: follow re-direction, safe when no credentials are involved (although the downloaded content must be
+#      verified)
+ARG CURL_OPTS="-fsSL"
 USER ${UNAME}
+
+# NOTE: often the GNU server is down, resort to the local copy of the gnuring.gpg file in case of failure
+# uncommenting the build statement below
+RUN curl ${CURL_OPTS} -o ${GPG_KEYRING_PATH} ${GNU_MIRROR}/gnu-keyring.gpg
+# COPY support/gnu-keyring.gpg ${GPG_KEYRING_PATH}
+
+RUN gpg --import ${GPG_KEYRING_PATH}
+# download Emacs archive
 RUN mkdir -p /installs/${EMACS_INSTALLER_NAME} \
     && cd /installs/${EMACS_INSTALLER_NAME} \
-    && curl --verbose --output ${EMACS_INSTALLER_ARCH} \
-    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH} \
-    && curl --verbose --output ${EMACS_INSTALLER_ARCH}.sig \
-    https://ftp.gnu.org/pub/gnu/emacs/${EMACS_INSTALLER_ARCH}.sig \
-    && gpgv --keyring ${GPG_KEYRING_PATH} ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH} \
-    && rm ${GPG_KEYRING_PATH}
+    && curl ${CURL_OPTS} -o ${EMACS_INSTALLER_ARCH} ${GNU_MIRROR}/emacs/${EMACS_INSTALLER_ARCH} \
+    && curl ${CURL_OPTS} -o ${EMACS_INSTALLER_ARCH}.sig ${GNU_MIRROR}/emacs/${EMACS_INSTALLER_ARCH}.sig
+# verify Emacs archive
+RUN cd /installs/${EMACS_INSTALLER_NAME} \
+    && gpg --verify ${EMACS_INSTALLER_ARCH}.sig ${EMACS_INSTALLER_ARCH}
 
 ARG EMACS_SRC_DIR="emacs-sources"
 RUN cd /installs/${EMACS_INSTALLER_NAME} \
@@ -279,11 +294,10 @@ RUN apt-get update && apt-get install -y \
 RUN apt update && apt install -y \
     ca-certificates \
     lsb-release \
-    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/${DISTRO_NAME}/gpg -o /etc/apt/keyrings/docker.asc \
+    && curl ${CURL_OPTS} https://download.docker.com/linux/${DISTRO_NAME}/gpg -o /etc/apt/keyrings/docker.asc \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${DISTRO_NAME} \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
@@ -339,7 +353,7 @@ ARG FIREFOX_SRC_PATH="/installs/firefox-src"
 ARG FIREFOX_ARCHIVE="firefox-latest.tar.bz2"
 RUN mkdir -p ${FIREFOX_SRC_PATH} \
     && cd ${FIREFOX_SRC_PATH} \
-    && curl -fsSL -o ${FIREFOX_ARCHIVE} \
+    && curl ${CURL_OPTS} -o ${FIREFOX_ARCHIVE} \
     "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US" \
     && tar xvf ${FIREFOX_ARCHIVE} \
     && ln -s $PWD/firefox/firefox /usr/bin/firefox
@@ -348,7 +362,7 @@ RUN mkdir -p ${FIREFOX_SRC_PATH} \
 # NPM
 #==============================================================================================================
 # source: https://deb.nodesource.com/
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+RUN curl ${CURL_OPTS} https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
     | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
     && NODE_MAJOR=20 \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" \
