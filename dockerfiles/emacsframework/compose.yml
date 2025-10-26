@@ -1,0 +1,13 @@
+# test compose file for Dockerfile development purposes
+services:
+  space:
+    image: ${EMACSFRAMEWORK_FRAMEWORK}:${EMACSFRAMEWORK_DCK_VER}
+    stdin_open: true
+    tty: true
+    # user: root
+    volumes:
+      - $HOME/doomemacs/.emacs.d:/home/esrv/.emacs.d
+      - $_STORE/emacs_git/doomemacs/.doom.d:$EMACS_HOME/.doom.d
+    environment:
+      - DISPLAY=armadillo12:0
+      - EMACSFRAMEWORK_FRAMEWORK=${EMACSFRAMEWORK_FRAMEWORK}

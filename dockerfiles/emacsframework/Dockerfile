@@ -1,17 +1,25 @@
 # ==================================================================================================
 #
-# Purpose     : Single image for spacemacs
+# Purpose     : Single image for emacs configurations
 #
 # How To Build:
 #
 # $ cd <this folder>
-# $ docker build --build-arg HOST_DOCKER_GID=<host-docker-gid> --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t spacemacs:<tag> .
+# $ docker build --build-arg HOST_DOCKER_GID=<host-docker-gid> --build-arg GID=$(id -g) --build-arg UID=$(id -u) -t <emacsframework>:<tag> .
 #
-# Where GID and UID are required only if it is required that the default user in the docker image
-# inherits the same rights as the user building the image.
+# Where <GID> and <UID> are required only if the default user in the container shall inherits the same rights
+# as the user building the image.
+#
+# The <emacsframework> is one of the so far tested:
+# - spacemacs (git@private:sfavazza/spacemacs.git)
+# - doomemacs (https://github.com/hlissner/doom-emacs)
+# Clone the git repository of your configuration as:
+# - mkdir $HOME/<emacsframework>
+# - git clone <url-emacsframework> $HOME/<emacsframework>/.emacs.d
+# - map the it to $HOME/<emacsframework>/.emacs.d in the container.
 #
 # Sometimes the docker group number on the host differs from the GID in the image, also the host docker GID
-# could be assigned to another group within the image. The "HOST_DOCKER_GID" variable allows to handle the
+# could be assigned to another group within the image. The <HOST_DOCKER_GID> variable allows to handle the
 # situation at build time (see where it is used).
 #
 # To get the "docker" GID exec:
@@ -32,8 +40,6 @@
 #   |  invocations)
 #   |- emacs_git: org-based configuration
 #   `- configs: folder containing optional tool configurations files (e.g. .gitconfig, .ssh (folder), etc..)
-#
-# Checkout the spacemacs repository in a folder ".emacs.d" and map it to $HOME/.emacs.d in the container.
 #
 # The files found in "configs" shall be mapped in under the home directory in the docker image.
 #
@@ -251,14 +257,19 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# CAUTION: make sure the names of the font archives do not contain spaces or else the fonts won't be installed
 # IMPORTANT: the icons used in Emacs are automatically installed via 'SPC SPC all-the-icons-install-fonts'
 # (which requires a restart of the application to take effect).
 # install fonts:
-# - Source Code Pro (https://github.com/adobe-fonts/source-code-pro/tree/main?tab=readme-ov-file - last release)
-# - Nanum Gothic
-# - Segoe UI emoji (https://legionfonts.com/fonts/segoe-ui-emoji)
-ARG SYSTEM_FONTS_DIR="/usr/share/fonts"
-COPY support/*.zip ${SYSTEM_FONTS_DIR}
+# - TTF-source-code-pro-2.042R-u_1.062R-i.zip (https://github.com/adobe-fonts/source-code-pro/tree/main?tab=readme-ov-file - last release)
+# - Nanum_Gothic.zip
+# - Segoe-ui-emoji.zip (https://legionfonts.com/fonts/segoe-ui-emoji)
+# - 0xProto-nerd-font.zip (https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/0xProto.zip)
+ARG SYSTEM_FONTS_DIR="/usr/share/fonts/"
+COPY support/0xProto-nerd-font.zip ${SYSTEM_FONTS_DIR}
+COPY support/Nanum_Gothic.zip ${SYSTEM_FONTS_DIR}
+COPY support/Segoe-ui-emoji.zip ${SYSTEM_FONTS_DIR}
+COPY support/TTF-source-code-pro-2.042R-u_1.062R-i.zip ${SYSTEM_FONTS_DIR}
 RUN cd ${SYSTEM_FONTS_DIR} \
     && for archive in $(ls *.zip); do unzip $archive; done \
     && fc-cache -f -v
@@ -437,6 +448,18 @@ RUN apt-get update && apt-get install -y \
 #     gcc-arm-linux-gnueabi \
 #     gcc-arm-linux-gnueabihf
 
+# doomemacs dependencies
+RUN apt-get update && apt-get install -y \
+    fd-find \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# other tools
+RUN apt-get update && apt-get install -y \
+    podman \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 #==============================================================================================================
 # customize shell configuration
 #==============================================================================================================
@@ -460,7 +483,7 @@ RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_BASHRC}
 
 WORKDIR ${HHOME}
 # allow locally installed binaries to be invoked
-ENV PATH="${EMACS_HOME}/.local/bin:${EMACS_INSTALL_DIR}/bin:$PATH"
+ENV PATH="${EMACS_HOME}/.local/bin:${EMACS_HOME}/.emacs.d/bin:${EMACS_INSTALL_DIR}/bin:$PATH"
 # use more colors than xterm when starting emacs in "-nw" mode
 ENV TERM="xterm-256color"
 

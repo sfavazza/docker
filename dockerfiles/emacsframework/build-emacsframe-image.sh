@@ -13,7 +13,7 @@ set -euxo pipefail
 docker_gid="$(stat -c '%g' /var/run/docker.sock)"
 
 # CAUTION: another reason to run from a host terminal is that it is not guaranteed to have all host
-# OS-variables defined in the spacemacs container.
+# OS-variables defined in the emacsframework container.
 if [ -f "/.dockerenv" ]; then
     echo "ERROR: this script shall be executed from host, not inside a container"
     return 1
@@ -23,7 +23,8 @@ fi
 # unrecognized by the Emacs container.
 # docker_gid="$( (getent group dockerhostgroup || getent group docker) | awk -F ':' '{ print $3 }' )"
 
-read -rp 'spacemacs container tag: ' container_tag
+read -rp "choose image name: " image_name
+read -rp "$image_name container tag: " image_tag
 
 # NOTE: suspend statement printing while selecting the password
 set +x
@@ -46,4 +47,4 @@ docker build \
        --build-arg UID="$(id -u)" \
        --build-arg DISTRO_NAME="$(lsb_release --id | awk '{ print tolower($3) }')" \
        --build-arg DISTRO_VER="$(lsb_release --release | awk '{ print $2 }')" \
-       -t spacemacs:"$container_tag" .
+       -t "$image_name":"$image_tag" .
