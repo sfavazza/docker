@@ -427,10 +427,12 @@ RUN apt-get update && apt-get install -y \
 #   device-tree-compiler: dtc, fdtdump, etc..
 #   u-boot-tools: mkimage, dumpimage
 #   bc: dependency to build the linux kernel
+#   libssl-dev: dependency to build u-boot
 RUN apt-get update && apt-get install -y \
     device-tree-compiler \
     u-boot-tools \
     bc \
+    libssl-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -452,6 +454,7 @@ RUN apt-get update && apt-get install -y \
 # other tools
 RUN apt-get update && apt-get install -y \
     podman \
+    apt-file \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
