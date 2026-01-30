@@ -177,12 +177,7 @@ ARG GPG_KEYRING_PATH="${EMACS_HOME}/_gnuring.gpg"
 ARG GNU_MIRROR="http://ftpmirror.gnu.org"
 ARG EMACS_INSTALLER_NAME="emacs-29.4"
 ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
-# curl options:
-# - f: fail silently, i.e. do not store the error in the output file (when -o is specified), script-friendly
-# - s: silent, do not show progress meter or err messages
-# - S: show error when -s is used to show any error despite in silent mode
-# - L: follow re-direction, safe when no credentials are involved (although the downloaded content must be
-#      verified)
+# for a description of the curl options see the related section in the tools_guides.org file
 ARG CURL_OPTS="-fsSL"
 USER ${UNAME}
 
