@@ -101,7 +101,9 @@ ARG HHOME=/home/sfavazza
 #==============================================================================================================
 # HANDLE USERS AND GROUPS
 #==============================================================================================================
-# add the user group
+# add the user group (but delete any existing user with the same user-group first)
+RUN user1000=$(grep 1000:1000 /etc/passwd | awk -F ':' '{print $1}'); if [ -n "$user1000" ]; then \
+    userdel $user1000; fi
 RUN groupadd --gid ${GID} ${UNAME}
 # add a new user and change the root password
 RUN useradd \
@@ -161,9 +163,17 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN if [ "${DISTRO_NAME}" = "${DISTRO_NAME_UBUNTU}" ]; then GCCJIT_VER=11; else GCCJIT_VER=12; fi \
-    && apt-get update && apt-get install -y \
-    libgccjit-$GCCJIT_VER-dev \
+# no need to distinguish, install them all 11, 12, 13
+RUN apt-get update && apt-get install -y \
+    libgccjit-11-dev \
+    libgccjit-12-dev \
+    libgccjit-13-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# add tree-sitter
+RUN apt-get update && apt-get install -y \
+    libtree-sitter-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -208,7 +218,6 @@ ARG EMACS_INSTALL_DIR=${EMACS_HOME}/emacsinstall
 RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     && ../${EMACS_SRC_DIR}/${EMACS_INSTALLER_NAME}/configure \
     --prefix=${EMACS_INSTALL_DIR} \
-    --enable-profiling \
     --enable-checking \
     --with-wide-int \
     --with-x-toolkit=lucid \
@@ -220,6 +229,7 @@ RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     --without-mailutils \
     --without-pop \
     --with-native-compilation \
+    --with-tree-sitter \
     && make \
     && make install
 # FIXME: the tree-sitter support in debian is still in testing (2024-11-17):  --with-tree-sitter
@@ -379,7 +389,7 @@ RUN curl ${CURL_OPTS} https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key 
 RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libx11-xcb1 \
-    libasound2 \
+    libasound2-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install -g vmd
