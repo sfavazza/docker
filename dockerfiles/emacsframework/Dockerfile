@@ -436,11 +436,14 @@ RUN apt-get update && apt-get install -y \
 #   device-tree-compiler: dtc, fdtdump, etc..
 #   u-boot-tools: mkimage, dumpimage
 #   bc: dependency to build the linux kernel
+#   bison, flex: deps for u-boot bulid
 #   libssl-dev: dependency to build u-boot
 RUN apt-get update && apt-get install -y \
     device-tree-compiler \
     u-boot-tools \
     bc \
+    bison \
+    flex \
     libssl-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
