@@ -163,11 +163,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# no need to distinguish, install them all 11, 12, 13
-RUN apt-get update && apt-get install -y \
-    libgccjit-11-dev \
-    libgccjit-12-dev \
-    libgccjit-13-dev \
+# No need to distinguish, install them all 11, 12, 13 to adapt to distro so far tested against. It is allowed to
+# fail them as not sure that all distro feature them
+RUN apt-get update && for ver in 11 12 13; do \
+    apt-get install -y libgccjit-$ver-dev || echo "WARNING: libgccjit-$ver-dev not found, skipping..."; done \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
