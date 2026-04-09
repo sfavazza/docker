@@ -184,7 +184,7 @@ ARG GPG_KEYRING_PATH="${EMACS_HOME}/_gnuring.gpg"
 # This http://ftpmirror.gnu.org link will automatically select the geographically closest mirror (better than
 # https://ftp.gnu.org which is often down).
 ARG GNU_MIRROR="http://ftpmirror.gnu.org"
-ARG EMACS_INSTALLER_NAME="emacs-29.4"
+ARG EMACS_INSTALLER_NAME="emacs-30.2"
 ARG EMACS_INSTALLER_ARCH="${EMACS_INSTALLER_NAME}.tar.xz"
 # for a description of the curl options see the related section in the tools_guides.org file
 ARG CURL_OPTS="-fsSL"
@@ -223,7 +223,6 @@ RUN cd /installs/${EMACS_INSTALLER_NAME}/emacs-build \
     --with-imagemagick \
     --with-gconf \
     --with-sqlite3 \
-    --with-imagemagick \
     --with-json \
     --without-mailutils \
     --without-pop \
