@@ -4,6 +4,8 @@ This repository collects all the sources used to build the docker images used to
 The main rule to keep a fast pace when building an image is to keep only the strictly necessary files in the
 current folder.
 
+IMPORTANT: install git-lfs when cloning
+
 ## Repository Structure ##
 
 Under `dockerfiles` folder are stored all the sub-folders named after the image they generate. Each of these
