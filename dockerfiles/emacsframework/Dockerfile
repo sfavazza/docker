@@ -488,6 +488,11 @@ RUN apt-get update --allow-insecure-repositories && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# script-based tools installation
+# support for aidermacs: https://github.com/MatthewZMD/aidermacs
+COPY --chmod=+x tools-install-scripts/aider-install.sh /installs
+RUN /installs/aider-install.sh
+
 #==============================================================================================================
 # customize shell configuration
 #==============================================================================================================
