@@ -97,6 +97,7 @@ ARG EMACS_ARCHIVE=emacs.tar.gz
 ARG EMACS_BIN=${EMACS_HOME}/emacs_install
 ARG EMACS_BASHRC=${EMACS_HOME}/.bashrc
 ARG HHOME=/home/sfavazza
+ARG EMACS_SCRIPTS=${EMACS_HOME}/scripts
 
 #==============================================================================================================
 # HANDLE USERS AND GROUPS
@@ -488,10 +489,11 @@ RUN apt-get update --allow-insecure-repositories && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir ${EMACS_SCRIPTS}
+
 # script-based tools installation
 # support for aidermacs: https://github.com/MatthewZMD/aidermacs
-COPY --chmod=+x tools-install-scripts/aider-install.sh /installs
-RUN /installs/aider-install.sh
+COPY --chmod=+x tools-install-scripts/aider-install.sh ${EMACS_SCRIPTS}
 
 #==============================================================================================================
 # customize shell configuration
@@ -521,3 +523,7 @@ ENV PATH="${EMACS_HOME}/.local/bin:${EMACS_HOME}/.emacs.d/bin:${EMACS_INSTALL_DI
 ENV TERM="xterm-256color"
 
 USER ${UNAME}
+
+COPY --chmod=+x --chown=${UNAME}:${UNAME} tools-install-scripts/container-init.sh ${EMACS_SCRIPTS}/init.sh
+# WARNING: the variables are not resolved within the ENTRYPOINT list; using the explicit path
+ENTRYPOINT ["/home/esrv/scripts/init.sh"]
