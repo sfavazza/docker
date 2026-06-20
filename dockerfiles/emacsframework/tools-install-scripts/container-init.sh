@@ -35,6 +35,16 @@ if [ -z "$no_tools" ]; then
     echo "init:: ...tool installation complete!"
 fi
 
+# NOTE: this won't work as it needs sudo... instead don't share the network with host
+# # RATIONALE: add current host name to the /etc/hosts to speed up sudo commands complaining about the not found
+# # hosts. This happens when instantiating the container w/ network=host. 'sed' cannot be used as cannot change in
+# # place. Just add another IP instead.
+# hn=$(hostname)
+# if [ ! "$(grep $hn /etc/hosts)" ]; then
+#     echo "init:: adding hostname '$hn' to /etc/hosts"
+#     echo "127.0.1.100 $hn" | sudo tee -a /etc/hosts >/dev/null
+# fi
+
 if [ -z "$no_emacs" ]; then
     echo "init:: starting emacs server"
     emacs --fg-daemon=mars
