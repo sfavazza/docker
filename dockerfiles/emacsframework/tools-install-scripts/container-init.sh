@@ -31,7 +31,18 @@ if [ -z "$no_tools" ]; then
     # installed in .local at container image build time. The following installation will take some time only on
     # first container up. Then the installers won't try to re-install.
     echo "init:: install tools in ~/.local/ dir..."
-    $_script_parent_dir/aider-install.sh --verbose
+    app="$HOME/.local/bin/aider"
+    if [ -e "$app" ]; then
+        echo "init:: WARNING $app exec found, delete it to re-trigger installation at container startup"
+    else
+        $_script_parent_dir/aider-install.sh --verbose
+    fi
+    app="$HOME/.local/.cargo/bin/cargo"
+    if [ -e "$app" ]; then
+        echo "init:: WARNING $app exec found, delete it to re-trigger installation at container startup"
+    else
+        sh $_script_parent_dir/rustup-init.sh -y --verbose
+    fi
     echo "init:: ...tool installation complete!"
 fi
 

@@ -494,6 +494,10 @@ RUN mkdir ${EMACS_SCRIPTS}
 # script-based tools installation
 # support for aidermacs: https://github.com/MatthewZMD/aidermacs
 COPY --chmod=+x tools-install-scripts/aider-install.sh ${EMACS_SCRIPTS}
+# install cargo
+ENV RUSTUP_HOME=${EMACS_HOME}/.local/.rustup
+ENV CARGO_HOME=${EMACS_HOME}/.local/.cargo
+COPY --chmod=+x tools-install-scripts/rustup-init.sh ${EMACS_SCRIPTS}
 
 #==============================================================================================================
 # customize shell configuration
@@ -518,7 +522,7 @@ RUN echo 'export GPG_TTY=$(tty)' >>${EMACS_BASHRC}
 
 WORKDIR ${HHOME}
 # allow locally installed binaries to be invoked
-ENV PATH="${EMACS_HOME}/.local/bin:${EMACS_HOME}/.emacs.d/bin:${EMACS_INSTALL_DIR}/bin:$PATH"
+ENV PATH="$CARGO_HOME/bin:${EMACS_HOME}/.local/bin:${EMACS_HOME}/.emacs.d/bin:${EMACS_INSTALL_DIR}/bin:$PATH"
 # use more colors than xterm when starting emacs in "-nw" mode
 ENV TERM="xterm-256color"
 
