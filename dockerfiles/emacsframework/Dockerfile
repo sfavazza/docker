@@ -491,13 +491,17 @@ RUN apt-get update --allow-insecure-repositories && apt-get install -y \
 
 RUN mkdir ${EMACS_SCRIPTS}
 
+#==============================================================================================================
 # script-based tools installation
+#==============================================================================================================
 # support for aidermacs: https://github.com/MatthewZMD/aidermacs
 COPY --chmod=+x tools-install-scripts/aider-install.sh ${EMACS_SCRIPTS}
 # install cargo
 ENV RUSTUP_HOME=${EMACS_HOME}/.local/.rustup
 ENV CARGO_HOME=${EMACS_HOME}/.local/.cargo
 COPY --chmod=+x tools-install-scripts/rustup-init.sh ${EMACS_SCRIPTS}
+# install Rust LSP
+COPY --chmod=+x tools-install-scripts/rust-analyzer-install.sh ${EMACS_SCRIPTS}
 
 #==============================================================================================================
 # customize shell configuration

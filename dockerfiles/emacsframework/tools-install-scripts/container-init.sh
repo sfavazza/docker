@@ -26,23 +26,30 @@ for arg in "$@"; do
     esac
 done
 
+# Install tool with its own install script, unless it already exists
+# 1 - application path to verify whether the target tool is already installed
+# @ - the rest is the install script and its optional arguments
+function install_tool_maybe {
+    app=$1
+    set -- "${@:2}"
+
+    if [ -e "$app" ]; then
+        echo "init:: WARNING '$app' exec found, delete it to re-trigger installation at container startup"
+    else
+        echo "init:: INFO installing '$app' tool"
+        $@
+    fi
+}
+
 if [ -z "$no_tools" ]; then
     # RATIONALE: to save .local content on host, the folder shall be bind-mount. This will obscure anything
     # installed in .local at container image build time. The following installation will take some time only on
     # first container up. Then the installers won't try to re-install.
     echo "init:: install tools in ~/.local/ dir..."
-    app="$HOME/.local/bin/aider"
-    if [ -e "$app" ]; then
-        echo "init:: WARNING $app exec found, delete it to re-trigger installation at container startup"
-    else
-        $_script_parent_dir/aider-install.sh --verbose
-    fi
-    app="$HOME/.local/.cargo/bin/cargo"
-    if [ -e "$app" ]; then
-        echo "init:: WARNING $app exec found, delete it to re-trigger installation at container startup"
-    else
-        sh $_script_parent_dir/rustup-init.sh -y --verbose
-    fi
+    install_tool_maybe "$HOME/.local/bin/aider" $_script_parent_dir/aider-install.sh --verbose
+    install_tool_maybe "$HOME/.local/.cargo/bin/cargo" sh $_script_parent_dir/rustup-init.sh -y --verbose
+    app_dest="$HOME/.local/bin/rust-analyzer"
+    install_tool_maybe $app_dest $_script_parent_dir/rust-analyzer-install.sh $app_dest
     echo "init:: ...tool installation complete!"
 fi
 
